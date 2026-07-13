@@ -1,0 +1,10 @@
+# IntelliJ
+.idea/
+
+# Backend
+college-placement-system/target/
+college-placement-system/src/main/resources/application-local.properties
+
+# Frontend
+college-placement-frontend/node_modules/
+college-placement-frontend/dist/
