@@ -34,7 +34,7 @@ const UploadCertificateDialog = ({
             skillNames: "",
         },
     });
-
+    const today = new Date().toISOString().split("T")[0];
     const onSubmit = async (data) => {
         try {
             await createCertificate({
@@ -113,6 +113,15 @@ const UploadCertificateDialog = ({
                             control={control}
                             name="issueDate"
                             type="date"
+                            rules={{
+                                required: "Issue Date is required",
+                                validate: (value) =>
+                                    value <= today ||
+                                    "Issue Date cannot be in the future",
+                            }}
+                            inputProps={{
+                                max: today,
+                            }}
                         />
 
                         <AppFormField

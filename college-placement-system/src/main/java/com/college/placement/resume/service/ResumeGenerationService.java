@@ -29,11 +29,16 @@ public class ResumeGenerationService {
     ) {
 
         System.out.println("Step 1 : Request received");
-
+        System.out.println("================================");
+        System.out.println("PROJECTS FROM REQUEST");
+        System.out.println(request.getProjects());
+        System.out.println("================================");
         String prompt = promptBuilder.buildPrompt(request);
-
+        System.out.println(prompt);
         System.out.println("Step 2 : Prompt built");
-
+        System.out.println("========== PROMPT ==========");
+        System.out.println(prompt);
+        System.out.println("============================");
         AIRequest aiRequest = new AIRequest(prompt);
 
         System.out.println("Step 3 : Calling Gemini");

@@ -82,7 +82,14 @@ export const experienceQuestions = [
     {
         key: "experienceLevel",
         question:
-            "💼 Are you a Fresher or Experienced?",
+            `💼 What's your experience level?
+
+Please choose one option:
+
+1️⃣ Fresher
+2️⃣ Experienced
+
+Enter only 1 or 2.`,
     },
 
     {

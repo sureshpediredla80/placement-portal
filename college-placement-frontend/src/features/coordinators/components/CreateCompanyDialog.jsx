@@ -189,10 +189,9 @@ const CreateCompanyDialog = ({
 
                     preparationResources:
                         preparationResources
-                            .split(",")
-                            .map((item) =>
-                                item.trim()
-                            ),
+                            .split("\n")
+                            .map((item) => item.trim())
+                            .filter((item) => item !== ""),
 
                     allowedBranchIds,
 
@@ -502,16 +501,26 @@ const CreateCompanyDialog = ({
                     <Grid item xs={12}>
                         <TextField
                             fullWidth
+                            multiline
+                            rows={4}
                             label="Preparation Resources"
-                            helperText="Separate using commas"
-                            value={
-                                preparationResources
-                            }
+                            placeholder={`https://www.geeksforgeeks.org/
+https://takeuforward.org/
+https://leetcode.com/problemset/`}
+                            helperText="Enter one resource link per line"
+                            value={preparationResources}
                             onChange={(e) =>
                                 setPreparationResources(
                                     e.target.value
                                 )
                             }
+                            InputLabelProps={{
+                                sx: {
+                                    fontSize: "1.05rem",
+                                    fontWeight: 600,
+                                    color: "text.primary",
+                                },
+                            }}
                         />
                     </Grid>
 

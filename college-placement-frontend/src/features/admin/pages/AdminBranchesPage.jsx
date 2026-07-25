@@ -1,8 +1,9 @@
 import {
     Box,
-    Button,
+    Button, Paper,
     Typography,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import {
     getBranches,
 } from "../api/adminApi";
@@ -175,39 +176,79 @@ const AdminBranchesPage = () => {
         <Box p={3}>
 
             <Box
-
-                display="flex"
-
-                justifyContent="space-between"
-
-                alignItems="center"
-
-                mb={3}
-
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3,
+                }}
             >
 
-                <Typography
-                    variant="h4"
-                    fontWeight={700}
-                >
-                    Branches
-                </Typography>
+                <Box>
+
+                    <Typography
+                        variant="h4"
+                        fontWeight={700}
+                    >
+                        Branches
+                    </Typography>
+
+                    <Typography
+                        variant="body1"
+                        color="text.secondary"
+                    >
+                        Manage all academic branches available in the placement portal.
+                    </Typography>
+
+                </Box>
 
                 <Button
-
                     variant="contained"
-
+                    startIcon={<AddIcon />}
                     onClick={() =>
                         setOpenDialog(true)
                     }
-
+                    size="large"
+                    sx={{
+                        px:4,
+                        borderRadius:3,
+                        textTransform:"none",
+                        fontWeight:600,
+                    }}
                 >
-
                     Add Branch
-
                 </Button>
 
+
+
             </Box>
+            <Paper
+                elevation={0}
+                sx={{
+                    p:2,
+                    mb:3,
+                    borderRadius:3,
+                    border:"1px solid",
+                    borderColor:"divider",
+                }}
+            >
+
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                >
+                    Total Branches
+                </Typography>
+
+                <Typography
+                    variant="h5"
+                    fontWeight={700}
+                >
+                    {branches.length}
+                </Typography>
+
+            </Paper>
+
 
             <CreateBranchDialog
 
@@ -222,12 +263,21 @@ const AdminBranchesPage = () => {
                 showSnackbar={showSnackbar}
 
             />
+            <Paper
+                elevation={0}
+                sx={{
+                    borderRadius:3,
+                    border:"1px solid",
+                    borderColor:"divider",
+                    overflow:"hidden",
+                }}
+            >
             <BranchesTable
                 branches={branches}
                 loading={loading}
                 onDelete={handleDeleteClick}
             />
-
+            </Paper>
             <AppSnackbar
 
                 open={snackbar.open}

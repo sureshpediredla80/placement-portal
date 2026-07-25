@@ -103,7 +103,18 @@ export const buildResumeRequest = ({
 
         },
 
-        projects,
+
+        projects: projects.map((project) => ({
+            title: project.projectTitle,
+            description: project.projectDescription,
+            problem: project.projectProblem,
+            solution: project.projectSolution,
+            role: project.projectRole,
+            challenges: project.projectChallenges,
+            techStack: project.projectTechStack,
+            github: project.projectGithub,
+            liveDemo: project.projectLiveDemo,
+        })),
 
         certificates,
 

@@ -156,19 +156,12 @@ export const getNextResponse = ({
 
             if (experienceStep === 0) {
 
-                const value =
-                    answer.toLowerCase();
-
-                if (
-
-                    value.includes("fresher")
-
-                ) {
+                if (answer === "1") {
 
                     return {
 
                         nextState:
-                        ConversationState.PROJECTS,
+                        ConversationState.PROJECT_AVAILABILITY,
 
                         nextPersonalStep:
                         personalInfoStep,
@@ -182,7 +175,37 @@ export const getNextResponse = ({
                         experienceQuestions[0].key,
 
                         message:
-                        projectQuestions[0].question,
+                            `🚀 Do you have any personal or academic projects?
+
+1️⃣ Yes
+2️⃣ No
+
+Please enter only 1 or 2.`,
+
+                    };
+
+                }
+
+                if (answer === "2") {
+
+                    return {
+
+                        nextState:
+                        ConversationState.EXPERIENCE,
+
+                        nextPersonalStep:
+                        personalInfoStep,
+
+                        nextEducationStep:
+                        educationStep,
+
+                        nextExperienceStep: 1,
+
+                        answerKey:
+                        experienceQuestions[0].key,
+
+                        message:
+                        experienceQuestions[1].question,
 
                     };
 
@@ -199,13 +222,17 @@ export const getNextResponse = ({
                     nextEducationStep:
                     educationStep,
 
-                    nextExperienceStep: 1,
+                    nextExperienceStep: 0,
 
-                    answerKey:
-                    experienceQuestions[0].key,
+                    answerKey: null,
 
                     message:
-                    experienceQuestions[1].question,
+                        `❌ Invalid choice.
+
+Please enter only:
+
+1️⃣ Fresher
+2️⃣ Experienced`,
 
                 };
 
@@ -249,7 +276,7 @@ export const getNextResponse = ({
             return {
 
                 nextState:
-                ConversationState.PROJECTS,
+                ConversationState.PROJECT_AVAILABILITY,
 
                 nextPersonalStep:
                 personalInfoStep,
@@ -266,9 +293,92 @@ export const getNextResponse = ({
                 experienceQuestions[
                     experienceStep
                     ].key,
+                message:
+                    `🚀 Do you have any personal or academic projects?
+
+1️⃣ Yes
+2️⃣ No
+
+Please enter only 1 or 2.`,
+
+            };
+        case ConversationState.PROJECT_AVAILABILITY:
+
+            if (answer === "1") {
+
+                return {
+
+                    nextState:
+                    ConversationState.PROJECTS,
+
+                    nextPersonalStep:
+                    personalInfoStep,
+
+                    nextEducationStep:
+                    educationStep,
+
+                    nextExperienceStep:
+                    experienceStep,
+
+                    nextProjectStep: 0,
+
+                    message:
+                    projectQuestions[0].question,
+
+                };
+
+            }
+
+            if (answer === "2") {
+
+                return {
+
+                    nextState:
+                    ConversationState.SKILLS,
+
+                    nextPersonalStep:
+                    personalInfoStep,
+
+                    nextEducationStep:
+                    educationStep,
+
+                    nextExperienceStep:
+                    experienceStep,
+
+                    nextProjectStep: 0,
+
+                    nextSkillStep: 0,
+
+                    message:
+                    skillQuestions[0].question,
+
+                };
+
+            }
+
+            return {
+
+                nextState:
+                ConversationState.PROJECT_AVAILABILITY,
+
+                nextPersonalStep:
+                personalInfoStep,
+
+                nextEducationStep:
+                educationStep,
+
+                nextExperienceStep:
+                experienceStep,
+
+                nextProjectStep: 0,
 
                 message:
-                projectQuestions[0].question,
+                    `❌ Invalid choice.
+
+Please enter only:
+
+1️⃣ Yes
+2️⃣ No`,
 
             };
 
@@ -386,7 +496,7 @@ export const getNextResponse = ({
             return {
 
                 nextState:
-                ConversationState.CERTIFICATES,
+                ConversationState.CERTIFICATE_AVAILABILITY,
 
                 nextPersonalStep:
                 personalInfoStep,
@@ -411,7 +521,113 @@ export const getNextResponse = ({
                 nextCertificateStep:0,
 
                 message:
-                certificateQuestions[0].question,
+                    `🏆 Do you have any certificates?
+
+1️⃣ Yes
+2️⃣ No
+
+Please enter only 1 or 2.`,
+
+            };
+
+        case ConversationState.CERTIFICATE_AVAILABILITY:
+
+            if (answer === "1") {
+
+                return {
+
+                    nextState:
+                    ConversationState.CERTIFICATES,
+
+                    nextPersonalStep:
+                    personalInfoStep,
+
+                    nextEducationStep:
+                    educationStep,
+
+                    nextExperienceStep:
+                    experienceStep,
+
+                    nextProjectStep:
+                    projectStep,
+
+                    nextSkillStep:
+                    skillStep,
+
+                    nextCertificateStep: 0,
+
+                    message:
+                    certificateQuestions[0].question,
+
+                };
+
+            }
+
+            if (answer === "2") {
+
+                return {
+
+                    nextState:
+                    ConversationState.ACHIEVEMENT_AVAILABILITY,
+
+                    nextPersonalStep:
+                    personalInfoStep,
+
+                    nextEducationStep:
+                    educationStep,
+
+                    nextExperienceStep:
+                    experienceStep,
+
+                    nextProjectStep:
+                    projectStep,
+
+                    nextSkillStep:
+                    skillStep,
+
+                    nextCertificateStep: 0,
+
+                    nextAchievementStep: 0,
+
+                    message:
+                        `🏅 Do you have any achievements?
+
+1️⃣ Yes
+2️⃣ No
+
+Please enter only 1 or 2.`,
+
+                };
+
+            }
+
+            return {
+
+                nextState:
+                ConversationState.CERTIFICATE_AVAILABILITY,
+
+                nextPersonalStep:
+                personalInfoStep,
+
+                nextEducationStep:
+                educationStep,
+
+                nextExperienceStep:
+                experienceStep,
+
+                nextProjectStep:
+                projectStep,
+
+                nextSkillStep:
+                skillStep,
+
+                message:
+                    `❌ Invalid choice.
+
+Please enter only:
+
+1️⃣ Yes
+2️⃣ No`,
 
             };
         case ConversationState.CERTIFICATES:
@@ -488,6 +704,118 @@ export const getNextResponse = ({
 
                 message:
                     "🏆 Great!\n\nWould you like to add another certificate?\n\nReply Yes or No.",
+
+            };
+
+        case ConversationState.ACHIEVEMENT_AVAILABILITY:
+
+            if (answer === "1") {
+
+                return {
+
+                    nextState:
+                    ConversationState.ACHIEVEMENTS,
+
+                    nextPersonalStep:
+                    personalInfoStep,
+
+                    nextEducationStep:
+                    educationStep,
+
+                    nextExperienceStep:
+                    experienceStep,
+
+                    nextProjectStep:
+                    projectStep,
+
+                    nextSkillStep:
+                    skillStep,
+
+                    nextCertificateStep:
+                    certificateStep,
+
+                    nextAchievementStep: 0,
+
+                    message:
+                    achievementQuestions[0].question,
+
+                };
+
+            }
+
+            if (answer === "2") {
+
+                return {
+
+                    nextState:
+                    ConversationState.TARGET_COMPANY,
+
+                    nextPersonalStep:
+                    personalInfoStep,
+
+                    nextEducationStep:
+                    educationStep,
+
+                    nextExperienceStep:
+                    experienceStep,
+
+                    nextProjectStep:
+                    projectStep,
+
+                    nextSkillStep:
+                    skillStep,
+
+                    nextCertificateStep:
+                    certificateStep,
+
+                    nextAchievementStep: 0,
+
+                    answerKey: null,
+
+                    message:
+                        `🎯 Which company are you targeting?
+
+Type Skip if you don't have one.`,
+
+                };
+
+            }
+
+            return {
+
+                nextState:
+                ConversationState.ACHIEVEMENT_AVAILABILITY,
+
+                nextPersonalStep:
+                personalInfoStep,
+
+                nextEducationStep:
+                educationStep,
+
+                nextExperienceStep:
+                experienceStep,
+
+                nextProjectStep:
+                projectStep,
+
+                nextSkillStep:
+                skillStep,
+
+                nextCertificateStep:
+                certificateStep,
+
+                nextAchievementStep:
+                achievementStep,
+
+                answerKey: null,
+
+                message:
+                    `❌ Invalid choice.
+
+Please enter only:
+
+1️⃣ Yes
+2️⃣ No`,
 
             };
         case ConversationState.ACHIEVEMENTS:

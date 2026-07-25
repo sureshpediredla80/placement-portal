@@ -1,4 +1,8 @@
-import { useState } from "react";
+import {
+    useState,
+    useRef,
+    useEffect,
+} from "react";
 import SendIcon from "@mui/icons-material/Send";
 import ResumePreview from "../preview/ResumePreview.jsx";
 
@@ -103,6 +107,14 @@ const ResumeChat = () => {
 
     const [loading, setLoading] =
         useState(false);
+    const messagesEndRef = useRef(null);
+    useEffect(() => {
+
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+
+    }, [messages]);
 
     const addAiMessage = (text) => {
 
@@ -147,6 +159,9 @@ const ResumeChat = () => {
                     achievements,
 
                 });
+            console.log("Projects State:", projects);
+            console.log("Current Project:", currentProject);
+            console.log("Resume Request:", request);
 
             setResumeRequest(request);
 
@@ -347,11 +362,28 @@ const ResumeChat = () => {
         }
         if (response.answerKey) {
 
+            let finalAnswer = answer;
+
+            // Convert 1 / 2 to actual text
+            if (response.answerKey === "experienceLevel") {
+
+                if (answer === "1") {
+
+                    finalAnswer = "Fresher";
+
+                } else if (answer === "2") {
+
+                    finalAnswer = "Experienced";
+
+                }
+
+            }
+
             setAnswers((prev) => ({
 
                 ...prev,
 
-                [response.answerKey]: answer,
+                [response.answerKey]: finalAnswer,
 
             }));
 
@@ -449,6 +481,33 @@ const ResumeChat = () => {
         return <ResumeLoading />;
 
     }
+    const handleRegenerate = async () => {
+
+        try {
+
+            setLoading(true);
+
+            const response = await generateResume(resumeRequest);
+
+            setGeneratedResume(response.resume);
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+    const handleBackToChat = () => {
+
+        setGeneratedResume("");
+
+    };
     if (generatedResume) {
 
         return (
@@ -456,6 +515,8 @@ const ResumeChat = () => {
             <ResumePreview
                 resume={generatedResume}
                 resumeRequest={resumeRequest}
+                onRegenerate={handleRegenerate}
+                onBack={handleBackToChat}
             />
 
         );
@@ -555,6 +616,7 @@ const ResumeChat = () => {
                     </Box>
 
                 ))}
+                <div ref={messagesEndRef} />
 
             </Box>
 

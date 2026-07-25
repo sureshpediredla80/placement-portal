@@ -14,7 +14,7 @@ export const handleCertificateConfirmation = ({
                                                   setMessages,
                                                   setConversationState,
                                                   setInput,
-                                                  achievementQuestions,
+
                                                   setAchievementStep,
                                               }) => {
 
@@ -118,30 +118,27 @@ export const handleCertificateConfirmation = ({
         ...prev,
 
         {
-
             id: Date.now(),
-
             sender: "user",
-
             text: input,
-
         },
 
         {
-
             id: Date.now() + 1,
-
             sender: "ai",
-
             text:
-            achievementQuestions[0].question,
+                `🏅 Do you have any achievements?
 
+1️⃣ Yes
+2️⃣ No
+
+Please enter only 1 or 2.`,
         },
 
     ]);
 
     setConversationState(
-        ConversationState.ACHIEVEMENTS
+        ConversationState.ACHIEVEMENT_AVAILABILITY
     );
 
     setInput("");

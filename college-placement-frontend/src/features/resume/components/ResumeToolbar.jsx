@@ -27,7 +27,14 @@ const ResumeToolbar = ({
 
         <Box
             sx={{
-                mb: 4,
+                mb:4,
+
+                "@media print":{
+
+                    display:"none",
+
+                },
+
             }}
         >
 

@@ -11,7 +11,7 @@ import {
     DialogActions,
 } from "@mui/material";
 import { useState } from "react";
-import Pagination from "@mui/material/Pagination";
+
 import AppSnackbar from "../../../components/common/AppSnackbar";
 import { deleteNews }
     from "../api/newsApi";
@@ -24,15 +24,13 @@ const CoordinatorNewsPage = () => {
         openCreateDialog,
         setOpenCreateDialog,
     ] = useState(false);
-    const [page, setPage] =
-        useState(0);
+
 
     const {
         news,
         loading,
-        totalPages,
         fetchNews,
-    } = useNews(page, 10);
+    } = useNews(0, 50);
 
     const [snackbar, setSnackbar] =
         useState({
@@ -113,7 +111,7 @@ const CoordinatorNewsPage = () => {
                     variant="h4"
                     fontWeight={700}
                 >
-                    News
+                    Digital NoticeBoard
                 </Typography>
 
                 <Button
@@ -271,24 +269,7 @@ const CoordinatorNewsPage = () => {
                     )
                 }
             />
-            <Box
-                mt={3}
-                display="flex"
-                justifyContent="center"
-            >
-                <Pagination
-                    page={page + 1}
-                    count={totalPages}
-                    onChange={(
-                        event,
-                        value
-                    ) =>
-                        setPage(
-                            value - 1
-                        )
-                    }
-                />
-            </Box>
+
         </Box>
 
     );

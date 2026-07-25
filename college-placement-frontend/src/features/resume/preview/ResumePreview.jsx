@@ -1,25 +1,21 @@
 import { Box } from "@mui/material";
 import ResumeToolbar
     from "../components/ResumeToolbar";
-import ResumeHeader from "./components/ResumeHeader";
-import SummarySection from "./components/SummarySection";
-import SkillsSection from "./components/SkillsSection";
-import ProjectsSection from "./components/ProjectsSection";
-import EducationSection from "./components/EducationSection";
-import ExperienceSection from "./components/ExperienceSection";
-import CertificatesSection from "./components/CertificatesSection";
-import AchievementsSection from "./components/AchievementsSection";
+
 import { useRef } from "react";
 import html2pdf from "html2pdf.js";
-import { extractSection } from "../utils/resumeParser";
+import ReactMarkdown from "react-markdown";
 import {
     printStyles,
     resumeContainerStyle,
+    markdownStyles,
 } from "./styles/resumeStyles";
 
 const ResumePreview = ({
                            resume,
                            resumeRequest,
+                           onRegenerate,
+                           onBack,
                        }) => {
     const resumeRef = useRef(null);
 
@@ -28,25 +24,7 @@ const ResumePreview = ({
         window.print();
 
     };
-    const summary = extractSection(
-        resume,
-        "Professional Summary"
-    );
 
-    const projects = extractSection(
-        resume,
-        "Projects"
-    );
-
-    const achievements = extractSection(
-        resume,
-        "Achievements"
-    );
-
-    const experience = extractSection(
-        resume,
-        "Experience"
-    );
     const handleDownload = () => {
 
         const options = {
@@ -101,65 +79,37 @@ const ResumePreview = ({
 
     return (
 
-        <Box
-            ref={resumeRef}
-            sx={{
+        <>
 
-                ...resumeContainerStyle,
-
-                ...printStyles,
-
-            }}
-
-        >
             <ResumeToolbar
-
                 onDownload={handleDownload}
-
                 onPrint={handlePrint}
-
-                onBack={() => {}}
-
-                onRegenerate={() => {}}
-
-            />
-            <ResumeHeader
-                personalInfo={resumeRequest.personalInfo}
-                resumeType={resumeRequest.resumeType}
+                onBack={onBack}
+                onRegenerate={onRegenerate}
             />
 
-            <SummarySection
-                summary={summary}
-            />
+            <Box
+                ref={resumeRef}
+                sx={{
+                    ...resumeContainerStyle,
+                    ...printStyles,
+                }}
+            >
 
-            <SkillsSection
-                skills={resumeRequest.skills}
-            />
+                <Box
+                    sx={{
+                        p: 5,
+                        ...markdownStyles,
+                    }}
+                >
+                    <ReactMarkdown>
+                        {resume}
+                    </ReactMarkdown>
+                </Box>
 
-            <ProjectsSection
-                projects={resumeRequest.projects}
-                aiContent={projects}
-            />
+            </Box>
 
-            <EducationSection
-                education={resumeRequest.education}
-            />
-
-            <ExperienceSection
-                experience={resumeRequest.experience}
-                aiContent={experience}
-            />
-
-            <CertificatesSection
-                certificates={resumeRequest.certificates}
-            />
-
-            <AchievementsSection
-                achievements={resumeRequest.achievements}
-                aiContent={achievements}
-            />
-
-        </Box>
+        </>
 
     );
 

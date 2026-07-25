@@ -10,7 +10,7 @@ public class ResumePromptBuilder {
 
         StringBuilder prompt = new StringBuilder();
 
-        buildSystemInstructions(prompt);
+
 
         buildPersonalInfo(prompt, request.getPersonalInfo());
 
@@ -42,27 +42,15 @@ public class ResumePromptBuilder {
 FINAL RESUME GENERATION RULES
 ==========================================================
 
-Generate a modern ATS-friendly resume.
+Generate ONE complete ATS-friendly resume in Markdown.
 
-Use this exact order:
+The Markdown you generate will be rendered directly in the frontend.
 
-# Candidate Name
+Do NOT assume any frontend templates.
 
-Contact Information
+Do NOT rely on frontend section rendering.
 
-## Professional Summary
-
-## Technical Skills
-
-## Projects
-
-## Education
-
-## Certifications
-
-## Achievements
-
-## Experience
+Return the complete resume exactly as it should appear to a recruiter.
 
 General Rules
 
@@ -106,173 +94,195 @@ General Rules
 
 ==========================================================
 ==========================================================
-SECTION FORMAT (MANDATORY)
+==========================================================
+FINAL OUTPUT FORMAT
 ==========================================================
 
-Generate ALL of these sections in the exact order.
+Return ONE complete professional resume in Markdown.
 
-# Candidate Name
+The Markdown itself is the final resume.
 
-Contact Information
+Use proper Markdown formatting.
+
+Example structure:
+
+# Full Name
+
+Email | Phone | City
+
+LinkedIn | GitHub | Portfolio
 
 ## Professional Summary
 
-Write a professional summary between 60–80 words.
-
-Do NOT exceed 80 words.
-
-----------------------------------------------------------
+(60-80 words)
 
 ## Technical Skills
 
-Group skills into:
+**Programming Languages**
+Java, Python
 
-Programming Languages
+**Frameworks**
+React, Spring Boot
 
-Frameworks
+**Databases**
+MySQL
 
-Databases
+**Tools**
+Git, Docker
 
-Tools
-
-Soft Skills
-
-----------------------------------------------------------
+**Soft Skills**
+Communication, Leadership
 
 ## Projects
 
-This section is MANDATORY whenever project information is provided.
+### Project Name
 
-For EVERY project:
+**Tech Stack:** React, Spring Boot
 
-Display:
+**Role:** Full Stack Developer
 
-Project Name
+- Bullet Point 1
 
-Tech Stack
+- Bullet Point 2
 
-Role
-
-Then write EXACTLY 3 bullet points.
-
-Each bullet point should:
-
-• Start with a strong action verb.
-
-• Mention technical implementation.
-
-• Mention problem solving.
-
-• Mention technologies naturally.
-
-• Be ATS friendly.
-
-Never invent features.
-
-Never invent technologies.
-
-Never invent achievements.
-
-----------------------------------------------------------
+- Bullet Point 3
 
 ## Education
 
-Keep concise.
+Bachelor of Technology
 
-----------------------------------------------------------
+College Name
+
+CGPA
+
+Graduation Year
 
 ## Certifications
 
-Keep one line for each certification.
-
-----------------------------------------------------------
+- Certificate Name — Organization (Date)
 
 ## Achievements
 
-Maximum 2 bullet points.
+- Achievement 1
 
-----------------------------------------------------------
+- Achievement 2
 
 ## Experience
 
 If Fresher
 
-Display only
+Print only
 
 Fresher
 
-Do NOT invent experience.
+Do not invent internships.
+
+Do not invent companies.
+
+Do not invent experience.
 
 ==========================================================
+IMPORTANT
 
-""");
+If any value is
 
-    }
+Skip
 
-    private void buildSystemInstructions(
-            StringBuilder prompt
-    ) {
+skip
 
-        prompt.append("""
-You are an expert ATS Resume Writer and Senior Technical Recruiter.
+SKIP
 
-Your responsibility is to create a world-class professional resume.
+N/A
 
-STRICT RULES:
+NA
 
-1. Never invent any information.
+null
 
-2. Never add skills that the user did not provide.
+empty
 
-3. Never add projects.
+""
 
-4. Never add certifications.
+Do NOT display it anywhere in the resume.
 
-5. Never add achievements.
+Never print empty labels.
 
-6. Never add experience.
+Never print
 
-7. Never change dates.
+GitHub : Skip
 
-8. Never change CGPA.
+Portfolio : Skip
 
-9. Never guess technologies.
+LinkedIn : Skip
 
-10. Use ONLY the information provided.
-
-11. Write powerful, recruiter-friendly content.
-
-12. Optimize for ATS score above 90.
-
-13. Use strong action verbs.
-
-14. Improve grammar.
-
-15. Improve readability.
-
-16. Keep Professional Summary under 80 words.
-
-17. Highlight technical strengths.
-
-18. Keep formatting clean.
-
-19. Return ONLY Markdown.
-
-20. Do NOT return explanations.
-
-21. Do NOT wrap the output inside ```markdown.
-
-22. Do NOT wrap inside ```.
-
-23. Start directly with the candidate name.
-
-24. Use proper Markdown headings.
-
-25. Use bullet points wherever appropriate.
-
-26. Make the resume look like it was written by a professional resume writer.
-
+Instead completely remove those fields.
 ================================================
+
+==========================================================
+REGENERATION RULES (VERY IMPORTANT)
+==========================================================
+
+Every time this resume is generated or regenerated:
+
+Rewrite ONLY the wording.
+
+Do NOT rewrite the structure.
+
+Do NOT remove any section.
+
+Do NOT add any section.
+
+Do NOT change the section order.
+
+Do NOT rename headings.
+
+Do NOT change formatting.
+
+Keep exactly the same Markdown structure.
+
+The only thing allowed to change is:
+
+• wording
+• sentence quality
+• grammar
+• readability
+• ATS optimization
+
+Everything else must remain identical.
+
+==========================================================
+==========================================================
+STRICT VALIDATION CHECKLIST
+==========================================================
+
+Before returning the resume verify:
+
+✓ Name preserved
+
+✓ Contact preserved
+
+✓ Professional Summary exists
+
+✓ Technical Skills exists
+
+✓ Projects exists if project list is not empty
+
+✓ Education exists
+
+✓ Certifications exists if certificates are provided
+
+✓ Achievements exists if achievements are provided
+
+✓ Experience exists
+
+If any mandatory section is missing,
+
+REGENERATE THE RESPONSE INTERNALLY
+
+until every section is present.
+
+Never return an incomplete resume.
+
+Return ONLY the final Markdown.
 
 """);
 
@@ -473,6 +483,39 @@ PROJECT DETAILS
 
 Resume Writing Rules for Projects
 
+Projects section is MANDATORY.
+
+If at least ONE project is provided:
+
+You MUST include the Projects section.
+
+Never omit it.
+
+Never summarize it into one paragraph.
+
+Never merge it into Professional Summary.
+
+For every project display:
+
+Project Name
+
+Tech Stack
+
+Role
+
+Exactly THREE bullet points.
+
+Never produce two bullet points.
+
+Never produce four bullet points.
+
+Never omit the project.
+
+Never invent additional projects.
+
+Use ONLY the information provided.
+
+This rule is mandatory.
 • Create an ATS-friendly project section.
 
 • Keep every project concise.
@@ -506,19 +549,19 @@ If projects are provided, never skip them.
 
 Write exactly 3 bullet points per project.
 
-Return the project in this format:
+Return the project exactly like this:
 
-Project Name
+### Project Name
 
-Tech Stack: ...
+**Tech Stack:** React, Spring Boot
 
-Role: ...
+**Role:** Full Stack Developer
 
-• ...
+- Designed ...
 
-• ...
+- Developed ...
 
-• ...
+- Implemented ...
 
 """);
     }
