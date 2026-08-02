@@ -5,8 +5,6 @@ package com.college.placement.entity;
  */
 public enum ApplicationStatus {
     APPLIED,
-    SHORTLISTED,
-    INTERVIEW_SCHEDULED,
     SELECTED,
     REJECTED
 }

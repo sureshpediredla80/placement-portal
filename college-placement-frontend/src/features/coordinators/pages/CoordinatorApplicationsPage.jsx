@@ -164,9 +164,7 @@ const CoordinatorApplicationsPage = () => {
                         Applied
                     </ToggleButton>
 
-                    <ToggleButton value="SHORTLISTED">
-                        Shortlisted
-                    </ToggleButton>
+
 
                     <ToggleButton value="SELECTED">
                         Selected

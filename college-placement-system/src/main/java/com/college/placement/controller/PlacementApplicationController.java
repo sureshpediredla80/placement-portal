@@ -1,5 +1,6 @@
 package com.college.placement.controller;
-
+import com.college.placement.dto.response.BulkResultUploadResponse;
+import org.springframework.web.multipart.MultipartFile;
 import com.college.placement.entity.ApplicationStatus;
 import com.college.placement.exception.BadRequestException;
 import com.college.placement.service.ApplicationService;
@@ -182,17 +183,7 @@ public class PlacementApplicationController {
      * @param applicationId the application ID to shortlist
      * @return ResponseEntity with updated {@link ApplicationResponse} DTO
      */
-    @PutMapping("/{applicationId}/shortlist")
-    @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
-    @Operation(summary = "Put  shortlistApplication")
-    @SecurityRequirement(name = "Bearer Authentication")
-    public ResponseEntity<ApplicationResponse> shortlistApplication(
-            @PathVariable("applicationId") Long applicationId) {
-        log.info("REST request to shortlist application ID: {}", applicationId);
-        
-        ApplicationResponse response = applicationService.shortlistApplication(applicationId);
-        return ResponseEntity.ok(response);
-    }
+
 
     /**
      * Rejects a student application with specific rejection remarks.
@@ -238,6 +229,35 @@ public class PlacementApplicationController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/company/{companyId}/bulk-results")
+    @PreAuthorize("hasAnyRole('ADMIN','COORDINATOR')")
+    @Operation(summary = "Bulk upload company results")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<BulkResultUploadResponse> bulkUploadResults(
+
+            @PathVariable("companyId") Long companyId,
+
+            @RequestParam("file") MultipartFile file) {
+
+        log.info(
+                "Bulk result upload request for company {}",
+                companyId
+        );
+
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException(
+                    "Please upload an Excel file."
+            );
+        }
+
+        BulkResultUploadResponse response =
+                applicationService.bulkUploadResults(
+                        companyId,
+                        file
+                );
+
+        return ResponseEntity.ok(response);
+    }
     // ============================================================
     // PRIVATE VALIDATION HELPERS
     // ============================================================

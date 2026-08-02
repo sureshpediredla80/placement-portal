@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 
 import {
-    shortlistApplication,
+
     selectApplication,
     rejectApplication,
 } from "../api/coordinatorApi";
@@ -78,9 +78,6 @@ const ApplicationDetailsDialog = (
         try {
             setActionLoading(true);
 
-            if (action === "SHORTLIST") {
-                await shortlistApplication(application.id);
-            }
 
             if (action === "SELECT") {
                 await selectApplication(application.id);
@@ -229,22 +226,7 @@ const ApplicationDetailsDialog = (
                         direction="row"
                         spacing={1.5}
                     >
-                        <Button
-                            variant="outlined"
-                            color="warning"
-                            disabled={actionLoading}
-                            onClick={() =>
-                                handleStatusChange(
-                                    "SHORTLIST"
-                                )
-                            }
-                        >
-                            {actionLoading ? (
-                                <CircularProgress size={20} />
-                            ) : (
-                                "Shortlist"
-                            )}
-                        </Button>
+
 
                         <Button
                             variant="contained"

@@ -165,15 +165,7 @@ export const getApplicationById = async (
     return response.data;
 };
 
-export const shortlistApplication = async (
-    applicationId
-) => {
-    const response = await axiosInstance.put(
-        `/api/applications/${applicationId}/shortlist`
-    );
 
-    return response.data;
-};
 
 export const selectApplication = async (
     applicationId
@@ -376,6 +368,27 @@ export const searchCompanies = async (params, page, size) => {
                 ...params,
                 page,
                 size,
+            },
+        }
+    );
+
+    return response.data;
+};
+export const bulkUploadResults = async (
+    companyId,
+    file
+) => {
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    const response = await axiosInstance.put(
+        `/api/applications/company/${companyId}/bulk-results`,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
             },
         }
     );

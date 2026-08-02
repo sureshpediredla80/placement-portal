@@ -126,9 +126,7 @@ const CoordinatorCompanyApplicationsPage = () => {
                         Applied
                     </MenuItem>
 
-                    <MenuItem value="SHORTLISTED">
-                        Shortlisted
-                    </MenuItem>
+
 
                     <MenuItem value="SELECTED">
                         Selected

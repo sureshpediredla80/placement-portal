@@ -115,9 +115,6 @@ const StudentApplicationsDialog = ({
                                 Applied
                             </MenuItem>
 
-                            <MenuItem value="SHORTLISTED">
-                                Shortlisted
-                            </MenuItem>
 
                             <MenuItem value="SELECTED">
                                 Selected
@@ -211,16 +208,11 @@ const StudentApplicationsDialog = ({
                                                         application.status
                                                     }
                                                     color={
-                                                        application.status ===
-                                                        "SELECTED"
+                                                        application.status === "SELECTED"
                                                             ? "success"
-                                                            : application.status ===
-                                                            "REJECTED"
+                                                            : application.status === "REJECTED"
                                                                 ? "error"
-                                                                : application.status ===
-                                                                "SHORTLISTED"
-                                                                    ? "warning"
-                                                                    : "primary"
+                                                                : "primary"
                                                     }
                                                 />
                                             </TableCell>

@@ -22,8 +22,7 @@ const ApplicationCard = ({ application }) => {
             case "REJECTED":
                 return "error";
 
-            case "SHORTLISTED":
-                return "warning";
+
 
             default:
                 return "primary";

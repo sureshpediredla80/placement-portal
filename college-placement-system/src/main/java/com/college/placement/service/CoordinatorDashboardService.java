@@ -91,8 +91,7 @@ public class CoordinatorDashboardService {
         ApplicationStatisticsResponse applicationStats = ApplicationStatisticsResponse.builder()
                 .totalApplications(placementApplicationRepository.countApplicationsByBranch(branch))
                 .appliedApplications(placementApplicationRepository.countApplicationsByBranchAndStatus(branch, ApplicationStatus.APPLIED))
-                .shortlistedApplications(placementApplicationRepository.countApplicationsByBranchAndStatus(branch, ApplicationStatus.SHORTLISTED))
-                .interviewScheduledApplications(placementApplicationRepository.countApplicationsByBranchAndStatus(branch, ApplicationStatus.INTERVIEW_SCHEDULED))
+
                 .selectedApplications(placementApplicationRepository.countApplicationsByBranchAndStatus(branch, ApplicationStatus.SELECTED))
                 .rejectedApplications(placementApplicationRepository.countApplicationsByBranchAndStatus(branch, ApplicationStatus.REJECTED))
                 .build();

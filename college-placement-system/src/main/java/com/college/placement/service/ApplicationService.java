@@ -4,7 +4,7 @@ import com.college.placement.dto.response.ApplicationResponse;
 import com.college.placement.entity.*;
 import com.college.placement.repository.*;
 import com.college.placement.exception.*;
-
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,10 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.college.placement.repository.ApplicationStatusHistoryRepository;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.*;
+
 import com.college.placement.entity.ApplicationStatusHistory;
-import java.util.List;
+
 import java.util.stream.Collectors;
+import com.college.placement.dto.response.BulkResultUploadResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Service class handling all business operations for student placement drive applications.
@@ -28,12 +31,16 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ApplicationService {
-
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile(
+                    "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+            );
     private final PlacementApplicationRepository placementApplicationRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final ApplicationStatusHistoryRepository historyRepository;
+    private final ExcelImportService excelImportService;
     // Concurrent in-memory map to store rejection remarks without violating entity modification constraints
 
     /**
@@ -47,13 +54,15 @@ public class ApplicationService {
     public ApplicationService(PlacementApplicationRepository placementApplicationRepository,
                               StudentProfileRepository studentProfileRepository,
                               CompanyRepository companyRepository,
-                              UserRepository userRepository, ApplicationStatusHistoryRepository historyRepository)
+                              UserRepository userRepository,ApplicationStatusHistoryRepository historyRepository,
+                              ExcelImportService excelImportService)
     {
         this.placementApplicationRepository = placementApplicationRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
         this.historyRepository = historyRepository;
+        this.excelImportService = excelImportService;
     }
 
 
@@ -235,25 +244,7 @@ public class ApplicationService {
      * @return the updated application response
      * @throws BadRequestException if transition is invalid
      */
-    @Transactional
-    public ApplicationResponse shortlistApplication(Long applicationId) {
-        log.info("Shortlisting application ID: {}", applicationId);
-        PlacementApplication application = findApplicationById(applicationId);
 
-        validateStatusTransition(application.getStatus(), ApplicationStatus.SHORTLISTED);
-
-        application.setStatus(ApplicationStatus.SHORTLISTED);
-        PlacementApplication savedApplication = placementApplicationRepository.save(application);
-
-        saveStatusHistory(
-                savedApplication,
-                ApplicationStatus.SHORTLISTED);
-
-
-        log.info("Application ID: {} successfully SHORTLISTED.", applicationId);
-
-        return mapToApplicationResponse(savedApplication);
-    }
 
     /**
      * Rejects an application with specific coordinator remarks.
@@ -322,6 +313,166 @@ public class ApplicationService {
         log.info("Application ID: {} successfully SELECTED. Student placed.", applicationId);
 
         return mapToApplicationResponse(savedApplication);
+    }
+
+
+    @Transactional
+    public BulkResultUploadResponse bulkUploadResults(
+            Long companyId,
+            MultipartFile file) {
+
+        log.info("Bulk result upload started for company {}", companyId);
+
+        Company company = findCompanyById(companyId);
+        String fileName = file.getOriginalFilename();
+
+        if (fileName == null ||
+                (!fileName.toLowerCase().endsWith(".xlsx")
+                        && !fileName.toLowerCase().endsWith(".xls"))) {
+
+            throw new BadRequestException(
+                    "Only Excel (.xlsx or .xls) files are allowed."
+            );
+        }
+        List<String> emails =
+                excelImportService.extractEmails(file);
+
+        emails = emails.stream()
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .distinct()
+                .toList();
+        for (String email : emails) {
+
+            if (!EMAIL_PATTERN.matcher(email).matches()) {
+
+                throw new BadRequestException(
+                        "Invalid email found in Excel file: " + email
+                );
+            }
+        }
+
+        if (emails.isEmpty()) {
+            throw new BadRequestException(
+                    "No email addresses found in the uploaded Excel file."
+            );
+        }
+
+        List<PlacementApplication> selectedApplications =
+                placementApplicationRepository
+                        .findSelectedApplicationsByEmails(
+                                companyId,
+                                emails
+                        );
+
+        List<PlacementApplication> allApplications =
+                placementApplicationRepository
+                        .findByCompanyId(companyId);
+        List<PlacementApplication> applicationsToSave =
+                new ArrayList<>();
+
+        List<StudentProfile> studentsToSave =
+                new ArrayList<>();
+        List<ApplicationStatusHistory> historyToSave =
+                new ArrayList<>();
+        Set<Long> selectedApplicationIds =
+                new HashSet<>();
+
+        List<String> notFoundEmails =
+                new ArrayList<>();
+
+        for (PlacementApplication application : selectedApplications) {
+
+            selectedApplicationIds.add(
+                    application.getId()
+            );
+        }
+        Set<String> foundEmails =
+                selectedApplications
+                        .stream()
+                        .map(app ->
+                                app.getStudent()
+                                        .getUser()
+                                        .getEmail()
+                                        .toLowerCase()
+                        )
+                        .collect(Collectors.toSet());
+
+        for (String email : emails) {
+
+            if (!foundEmails.contains(
+                    email.toLowerCase())) {
+
+                notFoundEmails.add(email);
+            }
+        }
+        int selectedCount = 0;
+        int rejectedCount = 0;
+        int skippedCount = 0;
+        for (PlacementApplication application : allApplications) {
+
+            StudentProfile student = application.getStudent();
+
+            if (selectedApplicationIds.contains(application.getId())) {
+
+                if (application.getStatus() == ApplicationStatus.SELECTED) {
+
+                    skippedCount++;
+                    selectedCount++;
+                    continue;
+                }
+
+                application.setStatus(ApplicationStatus.SELECTED);
+
+                student.setPlacementStatus(PlacementStatus.SELECTED);
+
+                studentsToSave.add(student);
+
+                applicationsToSave.add(application);
+
+                historyToSave.add(
+                        buildStatusHistory(
+                                application,
+                                ApplicationStatus.SELECTED
+                        )
+                );
+
+                selectedCount++;
+            }
+            else {
+
+                if (application.getStatus() == ApplicationStatus.REJECTED) {
+
+                    skippedCount++;
+                    rejectedCount++;
+                    continue;
+                }
+
+                application.setStatus(ApplicationStatus.REJECTED);
+
+                applicationsToSave.add(application);
+
+                historyToSave.add(
+                        buildStatusHistory(
+                                application,
+                                ApplicationStatus.REJECTED
+                        )
+                );
+
+                rejectedCount++;
+            }
+        }
+        studentProfileRepository.saveAll(studentsToSave);
+
+        placementApplicationRepository.saveAll(applicationsToSave);
+        historyRepository.saveAll(historyToSave);
+        return BulkResultUploadResponse.builder()
+                .totalEmails(emails.size())
+                .selectedCount(selectedCount)
+                .rejectedCount(rejectedCount)
+                .notFoundCount(notFoundEmails.size())
+                .notFoundEmails(notFoundEmails)
+                .build();
     }
 
     // ============================================================
@@ -420,23 +571,17 @@ public class ApplicationService {
         }
 
         switch (targetStatus) {
-            case SHORTLISTED:
-                if (currentStatus != ApplicationStatus.APPLIED) {
-                    log.warn("Eligibility validation failures: Invalid status transition from {} to SHORTLISTED.", currentStatus);
-                    throw new BadRequestException("Allowed transition: APPLIED -> SHORTLISTED. Invalid source status.");
-                }
-                break;
+           
             case REJECTED:
-                if (currentStatus != ApplicationStatus.APPLIED && currentStatus != ApplicationStatus.SHORTLISTED 
-                        && currentStatus != ApplicationStatus.INTERVIEW_SCHEDULED) {
-                    log.warn("Eligibility validation failures: Invalid status transition from {} to REJECTED.", currentStatus);
-                    throw new BadRequestException("Allowed transition: APPLIED/SHORTLISTED -> REJECTED. Invalid source status.");
+                if (currentStatus != ApplicationStatus.APPLIED) {
+                    throw new BadRequestException(
+                            "Allowed transition: APPLIED -> REJECTED.");
                 }
                 break;
             case SELECTED:
-                if (currentStatus != ApplicationStatus.SHORTLISTED && currentStatus != ApplicationStatus.INTERVIEW_SCHEDULED) {
-                    log.warn("Eligibility validation failures: Invalid status transition from {} to SELECTED.", currentStatus);
-                    throw new BadRequestException("Allowed transition: SHORTLISTED -> SELECTED. Invalid source status.");
+                if (currentStatus != ApplicationStatus.APPLIED) {
+                    throw new BadRequestException(
+                            "Allowed transition: APPLIED -> SELECTED.");
                 }
                 break;
             default:
@@ -485,6 +630,17 @@ public class ApplicationService {
         historyRepository.save(history);
     }
 
+    private ApplicationStatusHistory buildStatusHistory(
+            PlacementApplication application,
+            ApplicationStatus status) {
+
+        return ApplicationStatusHistory.builder()
+                .application(application)
+                .status(status)
+                .updatedBy(getCurrentUser())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
     private Page<ApplicationResponse> getPaginatedResponse(List<PlacementApplication> list, Pageable pageable) {
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());

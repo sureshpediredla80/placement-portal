@@ -1,7 +1,12 @@
 
 import {Box, Card, CardContent, Typography, Chip, Stack, Divider,Button,} from "@mui/material";
-
-import { useEffect, useState } from "react";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import {
+    useEffect,
+    useState,
+    useRef,
+} from "react";
+import AppSnackbar from "../../../components/common/AppSnackbar";
 import { useParams } from "react-router-dom";
 import { getCompanyById } from "../api/coordinatorApi";
 import CreateCompanyDialog from "../components/CreateCompanyDialog.jsx";
@@ -17,6 +22,7 @@ import {
 } from "react-router-dom";
 import {
     deleteCompany,
+    bulkUploadResults,
 } from "../api/coordinatorApi";
 const CoordinatorCompanyDetailsPage = () => {
     const { id } = useParams();
@@ -25,6 +31,22 @@ const CoordinatorCompanyDetailsPage = () => {
     const [loading, setLoading] = useState(true);
     const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] =
+        useState(false);
+    const [openResultDialog, setOpenResultDialog] =
+        useState(false);
+    const [selectedFile, setSelectedFile] =
+        useState(null);
+    const [uploading, setUploading] =
+        useState(false);
+    const [uploadResult, setUploadResult] =
+        useState(null);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success",
+    });
+    const fileInputRef = useRef(null);
+    const [openUploadDialog, setOpenUploadDialog] =
         useState(false);
     const fetchCompany = async () => {
         try {
@@ -74,8 +96,73 @@ const CoordinatorCompanyDetailsPage = () => {
 
             }
         };
+    const handleUploadResults =
+        async () => {
 
+            if (!selectedFile) {
 
+                setSnackbar({
+                    open: true,
+                    message: "Please select an Excel file.",
+                    severity: "warning",
+                });
+
+                return;
+            }
+
+            try {
+
+                setUploading(true);
+
+                const response =
+                    await bulkUploadResults(
+                        company.id,
+                        selectedFile
+                    );
+
+                setUploadResult(response);
+
+                setOpenUploadDialog(false);
+                setOpenResultDialog(true);
+                setSnackbar({
+
+                    open: true,
+
+                    message: "Results uploaded successfully.",
+
+                    severity: "success",
+
+                });
+                setSelectedFile(null);
+            } catch (error) {
+
+                console.error(error);
+                setSnackbar({
+
+                    open: true,
+
+                    message:
+                        error.response?.data?.message ??
+                        "Upload failed.",
+
+                    severity: "error",
+
+                });
+
+            } finally {
+
+                setUploading(false);
+
+            }
+        };
+    const handleSnackbarClose = () => {
+
+        setSnackbar((prev) => ({
+            ...prev,
+            open: false,
+        }));
+
+    };
     return (
         <Box>
             <Card
@@ -275,6 +362,21 @@ const CoordinatorCompanyDetailsPage = () => {
                 >
                     View Applications
                 </Button>
+                <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<UploadFileIcon />}
+                    onClick={() =>
+                        fileInputRef.current.click()
+                    }
+                >
+
+                    {selectedFile
+                        ? selectedFile.name
+                        : "Choose Excel"}
+
+                </Button>
+
             </Box>
 
 
@@ -324,9 +426,193 @@ const CoordinatorCompanyDetailsPage = () => {
                     >
                         Delete
                     </Button>
+
                 </DialogActions>
             </Dialog>
 
+
+
+            <Dialog
+                open={openUploadDialog}
+                onClose={() =>
+                    setOpenUploadDialog(false)
+                }
+            >
+                <DialogTitle>
+                    Upload Placement Results
+                </DialogTitle>
+
+                <DialogContent>
+
+                    <DialogContentText>
+                        Please confirm that you want to upload
+                        this Excel file.
+                    </DialogContentText>
+
+                    <Typography
+                        sx={{
+                            mt: 2,
+                            fontWeight: 600,
+                        }}
+                    >
+                        Selected File:
+                    </Typography>
+
+                    <Typography
+                        color="primary"
+                    >
+                        {selectedFile?.name}
+                    </Typography>
+
+                </DialogContent>
+
+                <DialogActions>
+
+                    <Button
+                        onClick={() =>
+                            setOpenUploadDialog(false)
+                        }
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button
+                        variant="contained"
+                        color="success"
+                        onClick={handleUploadResults}
+                        disabled={uploading}
+                    >
+                        {uploading ? "Uploading..." : "Upload"}
+                    </Button>
+
+                </DialogActions>
+
+            </Dialog>
+            <Dialog
+                open={openResultDialog}
+                onClose={() =>
+                    setOpenResultDialog(false)
+                }
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    Bulk Upload Result
+                </DialogTitle>
+                <Divider />
+                <DialogContent>
+
+                    <Stack spacing={2} sx={{ mt: 1 }}>
+
+                        <Typography>
+                            <strong>Total Emails:</strong>{" "}
+                            {uploadResult?.totalEmails}
+                        </Typography>
+
+                        <Typography color="success.main">
+                            <strong>Selected:</strong>{" "}
+                            {uploadResult?.selectedCount}
+                        </Typography>
+
+                        <Typography color="error.main">
+                            <strong>Rejected:</strong>{" "}
+                            {uploadResult?.rejectedCount}
+                        </Typography>
+
+                        <Typography color="warning.main">
+                            <strong>Not Found:</strong>{" "}
+                            {uploadResult?.notFoundCount}
+                        </Typography>
+
+                    </Stack>
+                    {
+                        uploadResult?.notFoundCount > 0 && (
+                            <>
+                                <Divider sx={{ my: 3 }} />
+
+                                <Typography
+                                    variant="h6"
+                                    fontWeight={600}
+                                    gutterBottom
+                                >
+                                    Emails Not Found
+                                </Typography>
+
+                                <Box
+                                    sx={{
+                                        maxHeight: 200,
+                                        overflowY: "auto",
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                        p: 2,
+                                    }}
+                                >
+                                    <Stack spacing={1}>
+                                        {uploadResult.notFoundEmails.map(
+                                            (email) => (
+                                                <Typography
+                                                    key={email}
+                                                    color="error"
+                                                >
+                                                    • {email}
+                                                </Typography>
+                                            )
+                                        )}
+                                    </Stack>
+                                </Box>
+                            </>
+                        )
+                    }
+
+                </DialogContent>
+
+                <DialogActions>
+
+                    <Button
+                        onClick={() => {
+
+                            setOpenResultDialog(false);
+
+                            setUploadResult(null);
+
+                        }}
+                    >
+                        Close
+                    </Button>
+                </DialogActions>
+
+            </Dialog>
+
+            <input
+                type="file"
+                ref={fileInputRef}
+                hidden
+                accept=".xlsx,.xls"
+                onChange={(event) => {
+
+                    if (
+                        event.target.files &&
+                        event.target.files.length > 0
+                    ) {
+
+                        const file =
+                            event.target.files[0];
+
+                        setSelectedFile(file);
+
+                        setOpenUploadDialog(true);
+
+                    }
+
+                }}
+            />
+            <AppSnackbar
+                open={snackbar.open}
+                message={snackbar.message}
+                severity={snackbar.severity}
+                onClose={handleSnackbarClose}
+            />
 
             </Box>
 

@@ -17,6 +17,7 @@ public interface PlacementApplicationRepository extends JpaRepository<PlacementA
     Page<PlacementApplication> findByStudentId(Long studentId, Pageable pageable);
     Page<PlacementApplication> findByCompanyId(Long companyId, Pageable pageable);
     Page<PlacementApplication> findByCompanyIdAndStatus(Long companyId, ApplicationStatus status, Pageable pageable);
+    List<PlacementApplication> findByCompanyId(Long companyId);
     Optional<PlacementApplication> findByStudentIdAndCompanyId(Long studentId, Long companyId);
     boolean existsByStudentIdAndCompanyId(Long studentId, Long companyId);
 
@@ -50,7 +51,18 @@ public interface PlacementApplicationRepository extends JpaRepository<PlacementA
     );
 
 
-
+    @Query("""
+SELECT pa
+FROM PlacementApplication pa
+JOIN pa.student s
+JOIN s.user u
+WHERE pa.company.id = :companyId
+AND LOWER(u.email) IN :emails
+""")
+    List<PlacementApplication> findSelectedApplicationsByEmails(
+            @Param("companyId") Long companyId,
+            @Param("emails") List<String> emails
+    );
 
 
 
