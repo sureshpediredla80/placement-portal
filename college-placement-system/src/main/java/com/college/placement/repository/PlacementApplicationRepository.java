@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
+import java.math.BigDecimal;
+import java.util.Optional;
 @Repository
 public interface PlacementApplicationRepository extends JpaRepository<PlacementApplication, Long> {
     Page<PlacementApplication> findByStudentId(Long studentId, Pageable pageable);
@@ -20,7 +21,10 @@ public interface PlacementApplicationRepository extends JpaRepository<PlacementA
     List<PlacementApplication> findByCompanyId(Long companyId);
     Optional<PlacementApplication> findByStudentIdAndCompanyId(Long studentId, Long companyId);
     boolean existsByStudentIdAndCompanyId(Long studentId, Long companyId);
-
+    List<PlacementApplication> findByStudentIdAndStatus(
+            Long studentId,
+            ApplicationStatus status
+    );
     // Get recruitment statistics for a company (grouped by status)
     @Query("SELECT p.status, COUNT(p) FROM PlacementApplication p WHERE p.company.id = :companyId GROUP BY p.status")
     List<Object[]> getApplicationStatsForCompany(@Param("companyId") Long companyId);
@@ -66,8 +70,25 @@ AND LOWER(u.email) IN :emails
 
 
 
-
-
+    @Query("""
+SELECT MAX(c.maximumPackage)
+FROM PlacementApplication pa
+JOIN pa.company c
+WHERE pa.student.id = :studentId
+AND pa.status = com.college.placement.entity.ApplicationStatus.SELECTED
+""")
+    Optional<BigDecimal> findHighestSelectedPackage(
+            @Param("studentId") Long studentId
+    );
+    @Query("""
+SELECT COUNT(pa) > 0
+FROM PlacementApplication pa
+WHERE pa.student.id = :studentId
+AND pa.status = com.college.placement.entity.ApplicationStatus.SELECTED
+""")
+    boolean isAlreadyPlaced(
+            @Param("studentId") Long studentId
+    );
 
 
 

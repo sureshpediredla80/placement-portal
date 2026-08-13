@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Arrays;
 import java.util.List;
+import com.college.placement.dto.response.PreviousCompanyResponse;
 /**
  * REST Controller exposing placement recruitment drive APIs.
  * Supports CRUD operations, role-based authorization, dynamic filtering, and paginated sorting.
@@ -279,6 +281,25 @@ public class CompanyController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         Page<CompanyListResponse> response = companyService.searchCompanies(companyName, roleOffered, branchId, year, cgpa, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/previous-drives")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
+    @Operation(summary = "Get previous company drives by year")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<List<PreviousCompanyResponse>> getPreviousCompanyDrives(
+            @RequestParam(name = "year") int year) {
+
+        log.info(
+                "REST request to fetch previous company drives for year: {}",
+                year
+        );
+
+        List<PreviousCompanyResponse> response =
+                companyService.getPreviousCompanyDrives(year);
+
         return ResponseEntity.ok(response);
     }
 

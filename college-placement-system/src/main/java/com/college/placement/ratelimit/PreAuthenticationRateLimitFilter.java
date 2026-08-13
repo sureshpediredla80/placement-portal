@@ -31,27 +31,54 @@ public class PreAuthenticationRateLimitFilter
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String uri = request.getRequestURI();
+        String uri =
+                request.getRequestURI();
 
-        if (
-                !uri.startsWith("/api/auth/")
-        ) {
+        // ==========================================
+        // Only authentication APIs
+        // ==========================================
 
-            filterChain.doFilter(request, response);
+        if (!uri.equals("/api/auth/login")) {
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
+
+        // ==========================================
+        // Client IP
+        // ==========================================
 
         String ip =
                 request.getRemoteAddr();
 
+        // ==========================================
+        // IMPORTANT:
+        // Separate authentication bucket
+        // ==========================================
+
+        String bucketKey =
+                "AUTH_" + ip + "_LOGIN";
+
         Bucket bucket =
                 rateLimitService.resolveBucket(
-                        "AUTH_" + ip,
+                        bucketKey,
                         RateLimitType.LOGIN
                 );
 
+        // ==========================================
+        // Consume token
+        // ==========================================
+
         ConsumptionProbe probe =
                 bucket.tryConsumeAndReturnRemaining(1);
+
+        // ==========================================
+        // Request allowed
+        // ==========================================
 
         if (probe.isConsumed()) {
 
@@ -62,6 +89,10 @@ public class PreAuthenticationRateLimitFilter
 
             return;
         }
+
+        // ==========================================
+        // Rate limit exceeded
+        // ==========================================
 
         long retryAfter =
                 Math.max(
@@ -80,14 +111,14 @@ public class PreAuthenticationRateLimitFilter
         );
 
         response.setContentType(
-                "application/json"
+                "application/json;charset=UTF-8"
         );
 
         response.getWriter().write("""
-            {
-                "status":429,
-                "message":"Too many login attempts."
-            }
-            """);
+        {
+            "status":429,
+            "message":"Too many login attempts."
+        }
+        """);
     }
 }

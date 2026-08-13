@@ -1,4 +1,5 @@
 package com.college.placement.service;
+import com.college.placement.service.email.EmailService;
 import com.college.placement.dto.request.ApplicationRequest;
 import com.college.placement.dto.response.ApplicationResponse;
 import com.college.placement.entity.*;
@@ -16,13 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.college.placement.repository.ApplicationStatusHistoryRepository;
 import java.time.LocalDateTime;
 import java.util.*;
-
+import java.math.BigDecimal;
+import java.util.Optional;
 import com.college.placement.entity.ApplicationStatusHistory;
 
 import java.util.stream.Collectors;
 import com.college.placement.dto.response.BulkResultUploadResponse;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.college.placement.entity.GenderEligibility;
 /**
  * Service class handling all business operations for student placement drive applications.
  * Enforces profile completion validation, drive eligibility criteria, unique applications,
@@ -41,6 +43,8 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final ApplicationStatusHistoryRepository historyRepository;
     private final ExcelImportService excelImportService;
+    private final EmailService emailService;
+    private final CompanyEligibilityService companyEligibilityService;
     // Concurrent in-memory map to store rejection remarks without violating entity modification constraints
 
     /**
@@ -55,7 +59,9 @@ public class ApplicationService {
                               StudentProfileRepository studentProfileRepository,
                               CompanyRepository companyRepository,
                               UserRepository userRepository,ApplicationStatusHistoryRepository historyRepository,
-                              ExcelImportService excelImportService)
+                              ExcelImportService excelImportService,
+                              EmailService emailService,
+                              CompanyEligibilityService companyEligibilityService)
     {
         this.placementApplicationRepository = placementApplicationRepository;
         this.studentProfileRepository = studentProfileRepository;
@@ -63,6 +69,8 @@ public class ApplicationService {
         this.userRepository = userRepository;
         this.historyRepository = historyRepository;
         this.excelImportService = excelImportService;
+        this.emailService = emailService;
+        this.companyEligibilityService = companyEligibilityService;
     }
 
 
@@ -96,8 +104,39 @@ public class ApplicationService {
         Company company = findCompanyById(request.getCompanyId());
 
         // 3. Perform complete eligibility and profile validation
+        // 3. Perform complete eligibility and profile validation
         validateStudentProfileCompletion(student);
-        validateApplicationEligibility(student, company);
+
+        CompanyEligibilityResult eligibilityResult =
+                companyEligibilityService.checkEligibility(
+                        student,
+                        company
+                );
+
+        if (!eligibilityResult.isEligible()) {
+
+            log.warn(
+                    "Student {} is not eligible for company {}: {}",
+                    student.getRollNumber(),
+                    company.getCompanyName(),
+                    eligibilityResult.getReason()
+            );
+
+            throw new BadRequestException(
+                    eligibilityResult.getReason()
+            );
+        }
+
+        if (placementApplicationRepository
+                .existsByStudentIdAndCompanyId(
+                        student.getId(),
+                        company.getId())) {
+
+            throw new BadRequestException(
+                    "You have already applied to this company drive."
+            );
+        }
+
 
         // 4. Create and persist application
         PlacementApplication application = PlacementApplication.builder()
@@ -375,6 +414,11 @@ public class ApplicationService {
                 new ArrayList<>();
         List<ApplicationStatusHistory> historyToSave =
                 new ArrayList<>();
+
+
+        List<StudentProfile> selectedStudents = new ArrayList<>();
+        List<StudentProfile> rejectedStudents = new ArrayList<>();
+
         Set<Long> selectedApplicationIds =
                 new HashSet<>();
 
@@ -409,22 +453,38 @@ public class ApplicationService {
         int selectedCount = 0;
         int rejectedCount = 0;
         int skippedCount = 0;
+
         for (PlacementApplication application : allApplications) {
 
             StudentProfile student = application.getStudent();
 
+            /*
+             * ============================================================
+             * SELECTED
+             * ============================================================
+             */
             if (selectedApplicationIds.contains(application.getId())) {
 
+                /*
+                 * Already selected:
+                 * Do not update again.
+                 * Do not send another email.
+                 */
                 if (application.getStatus() == ApplicationStatus.SELECTED) {
 
                     skippedCount++;
                     selectedCount++;
+
                     continue;
                 }
 
-                application.setStatus(ApplicationStatus.SELECTED);
+                application.setStatus(
+                        ApplicationStatus.SELECTED
+                );
 
-                student.setPlacementStatus(PlacementStatus.SELECTED);
+                student.setPlacementStatus(
+                        PlacementStatus.SELECTED
+                );
 
                 studentsToSave.add(student);
 
@@ -437,18 +497,34 @@ public class ApplicationService {
                         )
                 );
 
+                selectedStudents.add(student);
+
                 selectedCount++;
             }
+
+            /*
+             * ============================================================
+             * REJECTED
+             * ============================================================
+             */
             else {
 
+                /*
+                 * Already rejected:
+                 * Do not update again.
+                 * Do not send another email.
+                 */
                 if (application.getStatus() == ApplicationStatus.REJECTED) {
 
                     skippedCount++;
                     rejectedCount++;
+
                     continue;
                 }
 
-                application.setStatus(ApplicationStatus.REJECTED);
+                application.setStatus(
+                        ApplicationStatus.REJECTED
+                );
 
                 applicationsToSave.add(application);
 
@@ -459,13 +535,24 @@ public class ApplicationService {
                         )
                 );
 
+                rejectedStudents.add(student);
+
                 rejectedCount++;
             }
         }
+
+
         studentProfileRepository.saveAll(studentsToSave);
 
         placementApplicationRepository.saveAll(applicationsToSave);
         historyRepository.saveAll(historyToSave);
+        for (StudentProfile student : selectedStudents) {
+            sendSelectionNotification(student, company);
+        }
+
+        for (StudentProfile student : rejectedStudents) {
+            sendRejectionNotification(student, company);
+        }
         return BulkResultUploadResponse.builder()
                 .totalEmails(emails.size())
                 .selectedCount(selectedCount)
@@ -518,7 +605,7 @@ public class ApplicationService {
             log.warn("Completion check failure: cgpa is missing.");
             throw new BadRequestException("Student CGPA must be complete in profile.");
         }
-        if (student.getPhone() == null || student.getPhone().trim().isEmpty()) {
+        if (student.getWhatsappNumber() == null || student.getWhatsappNumber().trim().isEmpty()) {
             log.warn("Completion check failure: phoneNumber (phone) is missing.");
             throw new BadRequestException("Student phone number must be complete in profile.");
         }
@@ -528,42 +615,9 @@ public class ApplicationService {
         }
     }
 
-    private void validateApplicationEligibility(StudentProfile student, Company company) {
-        // Deadline check
-        if (company.getApplyDeadline().isBefore(LocalDateTime.now())) {
-            log.warn("Eligibility failure: application deadline ({}) has passed for company drive: {}", 
-                    company.getApplyDeadline(), company.getCompanyName());
-            throw new BadRequestException("The application deadline for this company drive has passed.");
-        }
 
-        // Branch eligibility check
-        if (!company.getAllowedBranches().contains(student.getBranch())) {
-            log.warn("Eligibility failure: student branch {} is not allowed by company {}", 
-                    student.getBranch().getCode(), company.getCompanyName());
-            throw new BadRequestException("Your academic branch is not eligible to apply for this company drive.");
-        }
 
-        // Year eligibility check
-        if (!company.getAllowedYears().contains(student.getYear())) {
-            log.warn("Eligibility failure: student year {} is not allowed by company {}", 
-                    student.getYear(), company.getCompanyName());
-            throw new BadRequestException("Your academic year is not eligible to apply for this company drive.");
-        }
 
-        // CGPA eligibility check
-        if (student.getCgpa() < company.getMinimumCgpa()) {
-            log.warn("Eligibility failure: student CGPA {} is less than minimum CGPA {}", 
-                    student.getCgpa(), company.getMinimumCgpa());
-            throw new BadRequestException("Your CGPA does not satisfy the company's minimum CGPA requirement.");
-        }
-
-        // Duplicate application check
-        if (placementApplicationRepository.existsByStudentIdAndCompanyId(student.getId(), company.getId())) {
-            log.warn("Eligibility failure: student {} has already applied to company {}", 
-                    student.getRollNumber(), company.getCompanyName());
-            throw new BadRequestException("You have already applied to this company drive.");
-        }
-    }
 
     private void validateStatusTransition(ApplicationStatus currentStatus, ApplicationStatus targetStatus) {
         if (currentStatus == targetStatus) {
@@ -640,7 +694,123 @@ public class ApplicationService {
                 .updatedBy(getCurrentUser())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
     }
+
+
+    private void sendSelectionNotification(
+            StudentProfile student,
+            Company company
+    ) {
+
+        if (student == null ||
+                student.getUser() == null ||
+                student.getUser().getEmail() == null ||
+                student.getUser().getEmail().isBlank()) {
+
+            log.warn(
+                    "Selection email skipped because student email is unavailable."
+            );
+
+            return;
+        }
+
+        String email = student.getUser().getEmail();
+
+        String studentName =
+                student.getUser().getFullName();
+
+        String companyName =
+                company.getCompanyName();
+
+        String roleOffered =
+                company.getRoleOffered() != null
+                        ? company.getRoleOffered()
+                        : "Not specified";
+
+        if (studentName == null || studentName.isBlank()) {
+            studentName = "Student";
+        }
+
+        try {
+
+            emailService.sendSelectionEmail(
+                    email,
+                    studentName,
+                    companyName,
+                    roleOffered
+            );
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to send selection email to {} for company {}",
+                    email,
+                    companyName,
+                    e
+            );
+        }
+    }
+
+    private void sendRejectionNotification(
+            StudentProfile student,
+            Company company
+    ) {
+
+        if (student == null ||
+                student.getUser() == null ||
+                student.getUser().getEmail() == null ||
+                student.getUser().getEmail().isBlank()) {
+
+            log.warn(
+                    "Rejection email skipped because student email is unavailable."
+            );
+
+            return;
+        }
+
+        String email = student.getUser().getEmail();
+
+        String studentName =
+                student.getUser().getFullName();
+
+        String companyName =
+                company.getCompanyName();
+
+        String roleOffered =
+                company.getRoleOffered() != null
+                        ? company.getRoleOffered()
+                        : "Not specified";
+
+        if (studentName == null || studentName.isBlank()) {
+            studentName = "Student";
+        }
+
+        try {
+
+            emailService.sendRejectionEmail(
+                    email,
+                    studentName,
+                    companyName,
+                    roleOffered
+            );
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to send rejection email to {} for company {}",
+                    email,
+                    companyName,
+                    e
+            );
+        }
+    }
+
+
+
+
+
+
     private Page<ApplicationResponse> getPaginatedResponse(List<PlacementApplication> list, Pageable pageable) {
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());
@@ -676,7 +846,7 @@ public class ApplicationService {
                 .companyId(company != null ? company.getId() : null)
                 .companyName(company != null ? company.getCompanyName() : null)
                 .roleOffered(company != null ? company.getRoleOffered() : null)
-                .packageOffered(company != null ? company.getPackageOffered() : null)
+                .packageOffered(company != null ? company.getMinimumPackage() : null)
                 .driveDate(company != null ? company.getDriveDate() : null)
                 .build();
     }

@@ -1,4 +1,5 @@
 package com.college.placement.service;
+import com.college.placement.entity.NotificationType;
 import com.college.placement.dto.response.CompanyListResponse;
 import com.college.placement.dto.request.CompanyRequest;
 import com.college.placement.dto.response.BranchResponse;
@@ -15,12 +16,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.college.placement.dto.response.PreviousCompanyResponse;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Service class handling all business operations for Company placement drives.
@@ -33,7 +35,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final BranchRepository branchRepository;
-
+private final NotificationService notificationService;
     /**
      * Creates a new Company placement drive in the system.
      * Performs strict business validation on drive dates, package offerings, and academic branch requirements.
@@ -52,13 +54,41 @@ public class CompanyService {
         if (request.getRoleOffered() == null || request.getRoleOffered().trim().isEmpty()) {
             throw new BadRequestException("Role offered is required.");
         }
-        if (request.getPackageOffered() == null || request.getPackageOffered().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Package offered must be positive.");
+        if (request.getMinimumPackage() == null ||
+                request.getMinimumPackage().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Minimum package must be positive.");
         }
 
-        validateCgpa(request.getMinimumCgpa());
+        if (request.getMaximumPackage() != null &&
+                request.getMaximumPackage().compareTo(request.getMinimumPackage()) < 0) {
+            throw new BadRequestException("Maximum package cannot be less than minimum package.");
+        }
+
+        validateCgpa(request.getMinimumCgpa(), request.getMaximumCgpa());
+
+        validateAcademicCriteria(request);
+
+
+
+        validateBacklogCriteria(
+                request.getBacklogsAllowed(),
+                request.getMaximumAllowedBacklogs()
+        );
+        validateEntranceRanks(
+                request.getMaximumEmcetRank(),
+                request.getMaximumEcetRank()
+        );
+
+
+
         validateCompanyDates(request.getApplyDeadline(), request.getDriveDate());
+
         validateAllowedYears(request.getAllowedYears());
+
+        validatePreviousPackage(
+                request.getMaximumPreviousPackage(),
+                request.getAllowAlreadyPlacedStudents()
+        );
         // Uniqueness validation
        // if (companyRepository.existsByCompanyName(request.getCompanyName())) {
        //     throw new BadRequestException("Company with name '" + request.getCompanyName() + "' already exists.");
@@ -70,18 +100,58 @@ public class CompanyService {
         Company company = Company.builder()
                 .companyName(request.getCompanyName().trim())
                 .roleOffered(request.getRoleOffered().trim())
-                .packageOffered(request.getPackageOffered())
+                .minimumPackage(request.getMinimumPackage())
+                .maximumPackage(request.getMaximumPackage())
                 .minimumCgpa(request.getMinimumCgpa())
+                .maximumCgpa(request.getMaximumCgpa())
+                .minimumSscPercentage(request.getMinimumSscPercentage())
+                .minimumInterPercentage(request.getMinimumInterPercentage())
+                .minimumDiplomaCgpa(request.getMinimumDiplomaCgpa())
+                .maximumEmcetRank(request.getMaximumEmcetRank())
+                .maximumEcetRank(request.getMaximumEcetRank())
+                .firstAttemptRequired(request.getFirstAttemptRequired())
+                .genderEligibility(request.getGenderEligibility())
                 .backlogsAllowed(request.getBacklogsAllowed() != null ? request.getBacklogsAllowed() : true)
+                .maximumAllowedBacklogs(request.getMaximumAllowedBacklogs())
                 .driveDate(request.getDriveDate())
                 .applyDeadline(request.getApplyDeadline())
                 .jobDescription(request.getJobDescription() != null ? request.getJobDescription().trim() : "")
                 .preparationResources(request.getPreparationResources() != null ? request.getPreparationResources() : new HashSet<>())
                 .allowedBranches(allowedBranches)
                 .allowedYears(request.getAllowedYears() != null ? request.getAllowedYears() : new HashSet<>())
+                .maximumPreviousPackage(
+                        request.getMaximumPreviousPackage())
+
+                .allowAlreadyPlacedStudents(
+                        request.getAllowAlreadyPlacedStudents() != null
+                                ? request.getAllowAlreadyPlacedStudents()
+                                : true
+                )
+                .includedPreviousCompanyIds(
+                        request.getIncludedCompanyIds() != null
+                                ? new HashSet<>(request.getIncludedCompanyIds())
+                                : new HashSet<>()
+                )
+                .excludedPreviousCompanyIds(
+                        request.getExcludedCompanyIds() != null
+                                ? new HashSet<>(request.getExcludedCompanyIds())
+                                : new HashSet<>()
+                )
+
+
                 .build();
 
         Company savedCompany = companyRepository.save(company);
+
+        notificationService.createNotification(
+                "New Company Added",
+                savedCompany.getCompanyName()
+                        + " has opened applications for "
+                        + savedCompany.getRoleOffered(),
+                NotificationType.COMPANY,
+                savedCompany.getId(),
+                null   // null means broadcast to all students
+        );
         log.info("Successfully created placement drive with ID: {} for company: {}", savedCompany.getId(), savedCompany.getCompanyName());
         return mapToCompanyResponse(savedCompany);
     }
@@ -119,20 +189,125 @@ public class CompanyService {
             company.setRoleOffered(newRole);
         }
 
-        if (request.getPackageOffered() != null) {
-            if (request.getPackageOffered().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new BadRequestException("Package offered must be positive.");
+        if (request.getMinimumPackage() != null) {
+
+            if (request.getMinimumPackage().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BadRequestException("Minimum package must be positive.");
             }
-            company.setPackageOffered(request.getPackageOffered());
+
+            company.setMinimumPackage(request.getMinimumPackage());
         }
 
-        if (request.getMinimumCgpa() != null) {
-            validateCgpa(request.getMinimumCgpa());
-            company.setMinimumCgpa(request.getMinimumCgpa());
+        BigDecimal minimumPackage =
+                request.getMinimumPackage() != null
+                        ? request.getMinimumPackage()
+                        : company.getMinimumPackage();
+
+        BigDecimal maximumPackage =
+                request.getMaximumPackage() != null
+                        ? request.getMaximumPackage()
+                        : company.getMaximumPackage();
+
+        if (maximumPackage != null &&
+                maximumPackage.compareTo(minimumPackage) < 0) {
+
+            throw new BadRequestException(
+                    "Maximum package cannot be less than minimum package.");
         }
 
+        company.setMinimumPackage(minimumPackage);
+        company.setMaximumPackage(maximumPackage);
+
+        if (request.getMinimumCgpa() != null ||
+                request.getMaximumCgpa() != null) {
+
+            Double min = request.getMinimumCgpa() != null
+                    ? request.getMinimumCgpa()
+                    : company.getMinimumCgpa();
+
+            Double max = request.getMaximumCgpa() != null
+                    ? request.getMaximumCgpa()
+                    : company.getMaximumCgpa();
+
+            validateCgpa(min, max);
+
+            company.setMinimumCgpa(min);
+            company.setMaximumCgpa(max);
+        }
         if (request.getBacklogsAllowed() != null) {
-            company.setBacklogsAllowed(request.getBacklogsAllowed());
+
+            company.setBacklogsAllowed(
+                    request.getBacklogsAllowed()
+            );
+
+            if (!request.getBacklogsAllowed()) {
+                company.setMaximumAllowedBacklogs(null);
+            }
+        }
+
+        if (request.getMaximumAllowedBacklogs() != null) {
+            company.setMaximumAllowedBacklogs(
+                    request.getMaximumAllowedBacklogs()
+            );
+        }
+        if (request.getMaximumPreviousPackage() != null) {
+            company.setMaximumPreviousPackage(
+                    request.getMaximumPreviousPackage());
+        }
+
+        if (request.getAllowAlreadyPlacedStudents() != null) {
+            company.setAllowAlreadyPlacedStudents(
+                    request.getAllowAlreadyPlacedStudents());
+        }
+
+        if (request.getIncludedCompanyIds() != null) {
+
+            company.getIncludedPreviousCompanyIds().clear();
+
+            company.getIncludedPreviousCompanyIds().addAll(
+                    request.getIncludedCompanyIds()
+            );
+        }
+
+        if (request.getExcludedCompanyIds() != null) {
+
+            company.getExcludedPreviousCompanyIds().clear();
+
+            company.getExcludedPreviousCompanyIds().addAll(
+                    request.getExcludedCompanyIds()
+            );
+        }
+
+
+
+
+        if (request.getMinimumSscPercentage() != null) {
+            company.setMinimumSscPercentage(request.getMinimumSscPercentage());
+        }
+
+        if (request.getMinimumInterPercentage() != null) {
+            company.setMinimumInterPercentage(request.getMinimumInterPercentage());
+        }
+
+        if (request.getMinimumDiplomaCgpa() != null) {
+            company.setMinimumDiplomaCgpa(
+                    request.getMinimumDiplomaCgpa());
+        }
+
+        if (request.getMaximumEmcetRank() != null) {
+            company.setMaximumEmcetRank(request.getMaximumEmcetRank());
+        }
+
+        if (request.getMaximumEcetRank() != null) {
+            company.setMaximumEcetRank(request.getMaximumEcetRank());
+        }
+
+        if (request.getFirstAttemptRequired() != null) {
+            company.setFirstAttemptRequired(request.getFirstAttemptRequired());
+        }
+
+        if (request.getGenderEligibility() != null) {
+            company.setGenderEligibility(request.getGenderEligibility());
         }
 
         if (request.getJobDescription() != null) {
@@ -171,6 +346,27 @@ public class CompanyService {
             company.getAllowedYears().addAll(
                     request.getAllowedYears());
         }
+        validateAcademicCriteria(
+                CompanyRequest.builder()
+                        .minimumSscPercentage(company.getMinimumSscPercentage())
+                        .minimumInterPercentage(company.getMinimumInterPercentage())
+                        .minimumDiplomaCgpa(company.getMinimumDiplomaCgpa())
+                        .build()
+        );
+        validateBacklogCriteria(
+                company.getBacklogsAllowed(),
+                company.getMaximumAllowedBacklogs()
+        );
+
+        validateEntranceRanks(
+                company.getMaximumEmcetRank(),
+                company.getMaximumEcetRank()
+        );
+
+        validatePreviousPackage(
+                company.getMaximumPreviousPackage(),
+                company.getAllowAlreadyPlacedStudents()
+        );
         Company updatedCompany = companyRepository.save(company);
         log.info("Successfully updated company placement drive with ID: {}", companyId);
         return mapToCompanyResponse(updatedCompany);
@@ -253,6 +449,51 @@ public class CompanyService {
                 .map(this::mapToListResponse);
     }
 
+    @Transactional(readOnly = true)
+    public List<PreviousCompanyResponse> getPreviousCompanyDrives(int year) {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Future year is not allowed
+        if (year > now.getYear()) {
+            throw new BadRequestException(
+                    "Year cannot be in the future."
+            );
+        }
+
+        // Start from January 1st of the requested year
+        LocalDateTime startDate =
+                LocalDateTime.of(
+                        year,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0
+                );
+
+        // Always fetch up to the current date/time
+        LocalDateTime endDate = now;
+
+        List<Company> companies =
+                companyRepository
+                        .findByDriveDateGreaterThanEqualAndDriveDateLessThanEqualOrderByDriveDateDesc(
+                                startDate,
+                                endDate
+                        );
+
+        return companies.stream()
+                .map(company ->
+                        PreviousCompanyResponse.builder()
+                                .id(company.getId())
+                                .companyName(company.getCompanyName())
+                                .driveDate(company.getDriveDate())
+                                .build()
+                )
+                .collect(Collectors.toList());
+    }
+
+
     /**
      * Performs clean, multi-criteria dynamic search and filter querying over placement drives.
      *
@@ -293,6 +534,43 @@ public class CompanyService {
     /**
      * Validates that applyDeadline is in the future and strictly prior to driveDate.
      */
+    private void validateBacklogCriteria(
+            Boolean backlogsAllowed,
+            Integer maximumAllowedBacklogs) {
+
+        if (backlogsAllowed == null) {
+            throw new BadRequestException(
+                    "Backlogs allowed flag is required."
+            );
+        }
+
+        // No backlogs allowed
+        if (Boolean.FALSE.equals(backlogsAllowed)) {
+
+            if (maximumAllowedBacklogs != null) {
+                throw new BadRequestException(
+                        "Maximum allowed backlogs must be null when backlogs are not allowed."
+                );
+            }
+
+            return;
+        }
+
+        // Backlogs are allowed
+        if (maximumAllowedBacklogs == null) {
+            throw new BadRequestException(
+                    "Maximum allowed backlogs is required when backlogs are allowed."
+            );
+        }
+
+        if (maximumAllowedBacklogs < 1) {
+            throw new BadRequestException(
+                    "Maximum allowed backlogs must be at least 1."
+            );
+        }
+    }
+
+
     private void validateCompanyDates(LocalDateTime applyDeadline, LocalDateTime driveDate) {
         if (applyDeadline == null) {
             throw new BadRequestException("Apply deadline date is required.");
@@ -315,12 +593,26 @@ public class CompanyService {
     /**
      * Validates that CGPA criteria conforms to typical academic 10-point standard ranges.
      */
-    private void validateCgpa(Double cgpa) {
-        if (cgpa == null) {
-            throw new BadRequestException("Minimum CGPA criteria is required.");
+    private void validateCgpa(Double minimumCgpa,
+                              Double maximumCgpa) {
+
+        if (minimumCgpa == null) {
+            throw new BadRequestException("Minimum CGPA is required.");
         }
-        if (cgpa < 0.0 || cgpa > 10.0) {
-            throw new BadRequestException("Minimum CGPA must be between 0.0 and 10.0.");
+
+        if (minimumCgpa < 0 || minimumCgpa > 10) {
+            throw new BadRequestException("Minimum CGPA must be between 0 and 10.");
+        }
+
+        if (maximumCgpa != null) {
+
+            if (maximumCgpa < 0 || maximumCgpa > 10) {
+                throw new BadRequestException("Maximum CGPA must be between 0 and 10.");
+            }
+
+            if (maximumCgpa < minimumCgpa) {
+                throw new BadRequestException("Maximum CGPA cannot be less than minimum CGPA.");
+            }
         }
     }
 
@@ -356,6 +648,75 @@ public class CompanyService {
             }
         }
     }
+    private void validatePreviousPackage(
+            BigDecimal maximumPreviousPackage,
+            Boolean allowAlreadyPlacedStudents) {
+
+        if (Boolean.FALSE.equals(allowAlreadyPlacedStudents)
+                && maximumPreviousPackage != null) {
+
+            throw new BadRequestException(
+                    "Maximum previous package should not be provided when already placed students are not allowed.");
+        }
+
+        if (maximumPreviousPackage != null
+                && maximumPreviousPackage.compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new BadRequestException(
+                    "Maximum previous package must be greater than zero.");
+        }
+    }
+    private void validateAcademicCriteria(
+            CompanyRequest request) {
+
+        if (request.getMinimumSscPercentage() != null) {
+
+            if (request.getMinimumSscPercentage() < 0
+                    || request.getMinimumSscPercentage() > 100) {
+
+                throw new BadRequestException(
+                        "SSC percentage must be between 0 and 100.");
+            }
+        }
+
+        if (request.getMinimumInterPercentage() != null) {
+
+            if (request.getMinimumInterPercentage() < 0
+                    || request.getMinimumInterPercentage() > 100) {
+
+                throw new BadRequestException(
+                        "Intermediate percentage must be between 0 and 100.");
+            }
+        }
+
+        if (request.getMinimumDiplomaCgpa() != null) {
+
+            if (request.getMinimumDiplomaCgpa() < 0
+                    || request.getMinimumDiplomaCgpa() > 10) {
+
+                throw new BadRequestException(
+                        "Diploma CGPA must be between 0 and 10.");
+            }
+        }
+    }
+    private void validateEntranceRanks(
+            Integer maximumEmcetRank,
+            Integer maximumEcetRank) {
+
+        if (maximumEmcetRank != null
+                && maximumEmcetRank <= 0) {
+
+            throw new BadRequestException(
+                    "Maximum EAPCET rank must be greater than zero.");
+        }
+
+        if (maximumEcetRank != null
+                && maximumEcetRank <= 0) {
+
+            throw new BadRequestException(
+                    "Maximum ECET rank must be greater than zero.");
+        }
+    }
 
     // ============================================================
     // DTO MAPPERS
@@ -377,15 +738,39 @@ public class CompanyService {
                 .id(company.getId())
                 .companyName(company.getCompanyName())
                 .roleOffered(company.getRoleOffered())
-                .packageOffered(company.getPackageOffered())
+                .minimumPackage(company.getMinimumPackage())
+                .maximumPackage(company.getMaximumPackage())
                 .minimumCgpa(company.getMinimumCgpa())
+                .maximumCgpa(company.getMaximumCgpa())
                 .backlogsAllowed(company.getBacklogsAllowed())
+                .maximumAllowedBacklogs(
+                        company.getMaximumAllowedBacklogs()
+                )
+                .minimumSscPercentage(company.getMinimumSscPercentage())
+                .minimumInterPercentage(company.getMinimumInterPercentage())
+                .minimumDiplomaCgpa(company.getMinimumDiplomaCgpa())
+                .maximumEmcetRank(company.getMaximumEmcetRank())
+                .maximumEcetRank(company.getMaximumEcetRank())
+                .firstAttemptRequired(company.getFirstAttemptRequired())
+                .genderEligibility(company.getGenderEligibility())
                 .driveDate(company.getDriveDate())
                 .applyDeadline(company.getApplyDeadline())
                 .jobDescription(company.getJobDescription())
                 .preparationResources(new HashSet<>(company.getPreparationResources()))
                 .allowedBranches(allowedBranchesMapped)
                 .allowedYears(new HashSet<>(company.getAllowedYears()))
+                .maximumPreviousPackage(
+                        company.getMaximumPreviousPackage())
+
+                .allowAlreadyPlacedStudents(
+                        company.getAllowAlreadyPlacedStudents())
+
+                .includedCompanyIds(
+                        new HashSet<>(company.getIncludedPreviousCompanyIds()))
+
+                .excludedCompanyIds(
+                        new HashSet<>(company.getExcludedPreviousCompanyIds()))
+
                 .build();
     }
 
@@ -395,7 +780,8 @@ public class CompanyService {
                 .id(company.getId())
                 .companyName(company.getCompanyName())
                 .roleOffered(company.getRoleOffered())
-                .packageOffered(company.getPackageOffered())
+                .minimumPackage(company.getMinimumPackage())
+                .maximumPackage(company.getMaximumPackage())
                 .applyDeadline(company.getApplyDeadline())
                 .build();
     }

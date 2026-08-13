@@ -1,5 +1,3 @@
-
-
 /**
  * Notification Entity
  *
@@ -72,14 +70,18 @@ public class Notification {
     private Boolean isRead = false;
 
     @Builder.Default
+    @Column(nullable = false)
+    private Boolean active = true;
+
+    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "notification_read_users",
-        joinColumns = @JoinColumn(name = "notification_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
+            name = "notification_read_users",
+            joinColumns = @JoinColumn(name = "notification_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     @Builder.Default
     private Set<User> readByUsers = new HashSet<>();

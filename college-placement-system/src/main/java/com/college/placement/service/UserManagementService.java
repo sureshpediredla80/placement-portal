@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import com.college.placement.dto.request.UserCreateRequest;
 import com.college.placement.dto.response.UserResponse;
@@ -161,13 +162,40 @@ public class UserManagementService {
                     .branch(branch)
                     .rollNumber(request.getRollNumber())
                     .year(request.getYear())
+
+                    // Academic defaults
+                    .sscPercentage(10.0)
+                    .intermediatePercentage(10.0)
                     .cgpa(0.0)
+                    .backlogs(0)
+                    .firstAttemptInAllSemesters(true)
+
+                    // Admission defaults
+                    .admissionType(null)
+                    .entranceExam(null)
+                    .entranceRank(null)
+
+                    // Placement defaults
                     .placementStatus(PlacementStatus.NOT_PREPARED)
                     .graduated(false)
-                    .phone(null)
+
+                    // Contact defaults
+                    .whatsappNumber(null)
+                    .personalEmail(null)
+                    .parentContactNumber(null)
+                    .parentEmail(null)
+
+                    // Personal defaults
+                    .bloodGroup(null)
+                    .residenceType(null)
+
+                    // Professional defaults
                     .githubLink(null)
                     .linkedinLink(null)
                     .resumeUrl(null)
+
+                    .skills(new HashSet<>())
+
                     .build();
 
             studentProfileRepository.save(studentProfile);

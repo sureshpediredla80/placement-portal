@@ -100,9 +100,9 @@ public class RateLimitService {
             case UPDATE ->
 
                     limit = Bandwidth.builder()
-                            .capacity(80)
+                            .capacity(100)
                             .refillGreedy(
-                                    80,
+                                    100,
                                     Duration.ofMinutes(1)
                             )
                             .build();
@@ -112,7 +112,7 @@ public class RateLimitService {
                     limit = Bandwidth.builder()
                             .capacity(10)
                             .refillGreedy(
-                                    5,
+                                    10,
                                     Duration.ofMinutes(1)
                             )
                             .build();

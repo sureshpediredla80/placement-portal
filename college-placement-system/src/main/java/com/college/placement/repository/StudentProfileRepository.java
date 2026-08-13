@@ -1,4 +1,5 @@
 package com.college.placement.repository;
+import com.college.placement.entity.Gender;
 import com.college.placement.entity.PlacementStatus;
 import com.college.placement.entity.Branch;
 import com.college.placement.entity.StudentProfile;
@@ -12,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import com.college.placement.entity.PlacementStatus;
+
 
 @Repository
 public interface StudentProfileRepository extends JpaRepository<StudentProfile, Long> {
@@ -51,16 +52,83 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
                                                   Pageable pageable);
 
     // Find eligible students for a company
-    @Query("SELECT s FROM StudentProfile s " +
-            "WHERE s.branch IN :allowedBranches " +
-            "AND s.year IN :allowedYears " +
-            "AND s.cgpa >= :minCgpa " +
-            "AND s.placementStatus IN :allowedStatuses")
-    Page<StudentProfile> findEligibleStudentsForCompany(@Param("allowedBranches") Set<Branch> allowedBranches,
-                                                        @Param("allowedYears") Set<Integer> allowedYears,
-                                                        @Param("minCgpa") Double minCgpa,
-                                                        @Param("allowedStatuses") List<PlacementStatus> allowedStatuses,
-                                                        Pageable pageable);
+    @Query("""
+SELECT s
+FROM StudentProfile s
+WHERE s.branch IN :allowedBranches
+AND s.year IN :allowedYears
+
+AND s.cgpa >= :minimumCgpa
+AND (:maximumCgpa IS NULL OR s.cgpa <= :maximumCgpa)
+
+AND (:gender IS NULL OR s.gender = :gender)
+
+AND (
+        :minimumSscPercentage IS NULL
+       OR s.sscPercentage >= :minimumSscPercentage
+)
+
+AND (
+        :minimumInterPercentage IS NULL
+        OR s.intermediatePercentage >= :minimumInterPercentage
+)
+AND (
+        :minimumDiplomaCgpa IS NULL
+        OR s.diplomaCgpa >= :minimumDiplomaCgpa
+)
+AND (
+      s.entranceExam IS NULL
+
+      OR
+
+      (
+          s.entranceExam = com.college.placement.entity.EntranceExam.EAPCET
+          AND (
+                :maximumEmcetRank IS NULL
+                OR s.entranceRank <= :maximumEmcetRank
+          )
+      )
+
+      OR
+
+      (
+          s.entranceExam = com.college.placement.entity.EntranceExam.ECET
+          AND (
+                :maximumEcetRank IS NULL
+                OR s.entranceRank <= :maximumEcetRank
+          )
+      )
+)
+
+AND (
+        :firstAttemptRequired IS NULL
+        OR :firstAttemptRequired = FALSE
+        OR s.firstAttemptInAllSemesters = TRUE
+)
+
+AND (
+        :backlogsAllowed = TRUE
+        OR s.backlogs = 0
+)
+
+AND s.placementStatus IN :allowedStatuses
+""")
+    Page<StudentProfile> findEligibleStudentsForCompany(
+            @Param("allowedBranches") Set<Branch> allowedBranches,
+            @Param("allowedYears") Set<Integer> allowedYears,
+            @Param("minimumCgpa") Double minimumCgpa,
+            @Param("maximumCgpa") Double maximumCgpa,
+            @Param("gender") Gender gender,
+            @Param("minimumSscPercentage") Double minimumSscPercentage,
+            @Param("minimumInterPercentage") Double minimumInterPercentage,
+            @Param("minimumDiplomaCgpa") Double minimumDiplomaCgpa,
+            @Param("maximumEmcetRank") Integer maximumEmcetRank,
+            @Param("maximumEcetRank") Integer maximumEcetRank,
+            @Param("firstAttemptRequired") Boolean firstAttemptRequired,
+            @Param("backlogsAllowed") Boolean backlogsAllowed,
+            @Param("allowedStatuses") List<PlacementStatus> allowedStatuses,
+            Pageable pageable
+    );
     List<StudentProfile> findByYearLessThan(Integer year);
     long countByBranch(Branch branch);
 

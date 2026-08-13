@@ -57,7 +57,9 @@ const AdminBranchesPage = lazy(() => import("../features/admin/pages/AdminBranch
 const AdminRateLimitAuditPage = lazy(() =>
     import("../features/admin/pages/AdminRateLimitAuditPage")
 );
-
+const NotificationPage = lazy(() =>
+    import("../features/notifications/pages/NotificationPage")
+);
 
 
 const ComingSoon = ({ title }) => (
@@ -97,10 +99,14 @@ const AppRoutes = () => (
           <Route path={ROUTES.ADMIN_NEWS} element={<AdminNewsPage />} />
           <Route path={ROUTES.ADMIN_BRANCHES} element={<AdminBranchesPage />} />
           <Route path={ROUTES.ADMIN_SKILLS} element={<ComingSoon title="Skills" />} />
-          <Route path={ROUTES.ADMIN_NOTIFICATIONS} element={<ComingSoon title="Notifications" />} />
+
           <Route
               path={ROUTES.ADMIN_RATE_LIMIT_AUDIT}
               element={<AdminRateLimitAuditPage />}
+          />
+          <Route
+              path={ROUTES.ADMIN_NOTIFICATIONS}
+              element={<NotificationPage />}
           />
         </Route>
       </Route>
@@ -113,13 +119,17 @@ const AppRoutes = () => (
           <Route path={ROUTES.COORDINATOR_CERTIFICATES} element={<CoordinatorCertificatesPage/>} />
           <Route path={ROUTES.COORDINATOR_SESSIONS} element={<CoordinatorSessionsPage />} />
           <Route path={ROUTES.COORDINATOR_NEWS} element={< CoordinatorNewsPage/>} />
-          <Route path={ROUTES.COORDINATOR_NOTIFICATIONS} element={<ComingSoon title="Notifications" />} />
+
           <Route path={ROUTES.COORDINATOR_PROFILE} element={<CoordinatorProfilePage />}/>
           <Route path={ROUTES.COORDINATOR_STUDENTS} element={<CoordinatorStudentsPage />}/>
           <Route path={ROUTES. COORDINATOR_COMPANY_DETAILS} element={<CoordinatorCompanyDetailsPage />}/>
           <Route path={ROUTES.COORDINATOR_APPLICATIONS} element={<CoordinatorApplicationsPage />}/>
           <Route path={ROUTES.COORDINATOR_COMPANY_APPLICATIONS} element={<CoordinatorCompanyApplicationsPage />}/>
           <Route path={ROUTES.COORDINATOR_TOPICS} element={<CoordinatorTopicsPage />} />
+          <Route
+              path={ROUTES.COORDINATOR_NOTIFICATIONS}
+              element={<NotificationPage />}
+          />
         </Route>
       </Route>
 
@@ -133,10 +143,14 @@ const AppRoutes = () => (
           <Route path={ROUTES.STUDENT_CERTIFICATES} element={<StudentCertificatesPage />}/>
           <Route path={ROUTES.STUDENT_SESSIONS} element={< StudentSessionsPage/>} />
           <Route path={ROUTES.STUDENT_NEWS} element={<StudentNewsPages />} />
-          <Route path={ROUTES.STUDENT_NOTIFICATIONS} element={<ComingSoon title="Notifications" />} />
+
           <Route path={ROUTES.STUDENT_COMPANY_DETAILS} element={<StudentCompanyDetailsPage />}/>
           <Route path={ROUTES.STUDENT_TOPICS} element={<StudentTopicsPage />} />
           <Route path={ROUTES.STUDENT_RESUME} element={<ResumeBuilderPage/>} />
+          <Route
+              path={ROUTES.STUDENT_NOTIFICATIONS}
+              element={<NotificationPage />}
+          />
         </Route>
       </Route>
 

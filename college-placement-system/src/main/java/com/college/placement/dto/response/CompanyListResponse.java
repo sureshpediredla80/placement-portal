@@ -10,8 +10,14 @@ import java.time.LocalDateTime;
 public class CompanyListResponse {
 
     private Long id;
+
     private String companyName;
+
     private String roleOffered;
-    private BigDecimal packageOffered;
+
+    private BigDecimal minimumPackage;
+
+    private BigDecimal maximumPackage;
+
     private LocalDateTime applyDeadline;
 }

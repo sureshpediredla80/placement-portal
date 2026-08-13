@@ -32,15 +32,24 @@ public class Company {
     @Column(name = "role_offered", nullable = false, length = 100)
     private String roleOffered;
 
-    @Column(name = "package_offered", nullable = false, precision = 15, scale = 2)
-    private BigDecimal packageOffered;
+    @Column(name = "minimum_package", precision = 15, scale = 2)
+    private BigDecimal minimumPackage;
+
+    @Column(name = "maximum_package", precision = 15, scale = 2)
+    private BigDecimal maximumPackage;
 
     @Column(name = "minimum_cgpa", nullable = false)
     private Double minimumCgpa;
+    @Column(name = "maximum_cgpa")
+    private Double maximumCgpa;
 
     @Builder.Default
     @Column(name = "backlogs_allowed", nullable = false)
     private Boolean backlogsAllowed = true;
+    @Column(name = "maximum_allowed_backlogs")
+    private Integer maximumAllowedBacklogs;
+
+
 
     @Column(name = "drive_date", nullable = false)
     private LocalDateTime driveDate;
@@ -78,4 +87,48 @@ public class Company {
     @Column(name = "allowed_year", nullable = false)
     @Builder.Default
     private Set<Integer> allowedYears = new HashSet<>();
+    @Column(name = "minimum_ssc_percentage")
+    private Double minimumSscPercentage;
+    @Column(name = "minimum_inter_percentage")
+    private Double minimumInterPercentage;
+    @Column(name = "minimum_diploma_cgpa")
+    private Double minimumDiplomaCgpa;
+    @Column(name = "maximum_emcet_rank")
+    private Integer maximumEmcetRank;
+
+    @Column(name = "maximum_ecet_rank")
+    private Integer maximumEcetRank;
+    @Column(name = "first_attempt_required")
+    @Builder.Default
+    private Boolean firstAttemptRequired = false;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender_eligibility")
+    @Builder.Default
+    private GenderEligibility genderEligibility = GenderEligibility.ALL;
+    @Column(name = "maximum_previous_package", precision = 15, scale = 2)
+    private BigDecimal maximumPreviousPackage;
+
+    @Builder.Default
+    @Column(name = "allow_already_placed_students", nullable = false)
+    private Boolean allowAlreadyPlacedStudents = true;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "company_included_previous_companies",
+            joinColumns = @JoinColumn(name = "company_id")
+    )
+    @Column(name = "previous_company_id")
+    @Builder.Default
+    private Set<Long> includedPreviousCompanyIds = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "company_excluded_previous_companies",
+            joinColumns = @JoinColumn(name = "company_id")
+    )
+    @Column(name = "previous_company_id")
+    @Builder.Default
+    private Set<Long> excludedPreviousCompanyIds = new HashSet<>();
+
+
 }

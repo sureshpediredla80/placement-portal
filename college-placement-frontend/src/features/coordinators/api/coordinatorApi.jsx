@@ -95,6 +95,20 @@ export const getAllCompanies = async (page = 0, size = 10) => {
 
     return response.data;
 };
+
+export const getPreviousCompanyDrives = async (year) => {
+    const response = await axiosInstance.get(
+        "/api/companies/previous-drives",
+        {
+            params: {
+                year,
+            },
+        }
+    );
+
+    return response.data;
+};
+
 export const getCompanyById = async (companyId) => {
     const response = await axiosInstance.get(
         `/api/companies/${companyId}`
@@ -392,6 +406,19 @@ export const bulkUploadResults = async (
             },
         }
     );
+
+    return response.data;
+};
+export const updateStudent = async (
+    studentId,
+    payload
+) => {
+
+    const response =
+        await axiosInstance.put(
+            `/api/students/${studentId}`,
+            payload
+        );
 
     return response.data;
 };

@@ -172,52 +172,179 @@ public class CoordinatorStudentManagementService {
                 });
     }
 
-    /**
-     * Maps a {@link StudentProfile} entity to its corresponding {@link StudentProfileResponse} DTO.
-     *
-     * @param studentProfile the entity to map
-     * @return the mapped {@link StudentProfileResponse} DTO
-     */
-    private StudentProfileResponse mapToStudentProfileResponse(StudentProfile studentProfile)
-    {
+
+    private StudentProfileResponse mapToStudentProfileResponse(StudentProfile profile) {
+
         UserResponse userResponse = UserResponse.builder()
-                .id(studentProfile.getUser().getId())
-                .fullName(studentProfile.getUser().getFullName())
-                .email(studentProfile.getUser().getEmail())
-                .role(studentProfile.getUser().getRole())
-                .isActive(studentProfile.getUser().getIsActive())
-                .createdAt(studentProfile.getUser().getCreatedAt())
+                .id(profile.getUser().getId())
+                .fullName(profile.getUser().getFullName())
+                .email(profile.getUser().getEmail())
+                .role(profile.getUser().getRole())
+                .isActive(profile.getUser().getIsActive())
+                .createdAt(profile.getUser().getCreatedAt())
                 .build();
+
 
         BranchResponse branchResponse = BranchResponse.builder()
-                .id(studentProfile.getBranch().getId())
-                .name(studentProfile.getBranch().getName())
-                .code(studentProfile.getBranch().getCode())
-                .department(studentProfile.getBranch().getDepartment())
+                .id(profile.getBranch().getId())
+                .name(profile.getBranch().getName())
+                .code(profile.getBranch().getCode())
+                .department(profile.getBranch().getDepartment())
                 .build();
 
-        Set<SkillResponse> skillResponses = studentProfile.getSkills() == null ? new HashSet<>() :
-                studentProfile.getSkills().stream()
-                        .map(skill -> SkillResponse.builder()
-                                .id(skill.getId())
-                                .name(skill.getName())
-                                .description(skill.getDescription())
-                                .build())
-                        .collect(Collectors.toSet());
+
+        Set<SkillResponse> skillResponses =
+                profile.getSkills() == null
+                        ? new HashSet<>()
+                        :
+                        profile.getSkills()
+                                .stream()
+                                .map(skill -> SkillResponse.builder()
+                                        .id(skill.getId())
+                                        .name(skill.getName())
+                                        .description(skill.getDescription())
+                                        .build())
+                                .collect(Collectors.toSet());
+
+
 
         return StudentProfileResponse.builder()
-                .id(studentProfile.getId())
+
+                // ============================
+                // Basic Details
+                // ============================
+
+                .id(profile.getId())
                 .user(userResponse)
                 .branch(branchResponse)
-                .rollNumber(studentProfile.getRollNumber())
-                .year(studentProfile.getYear())
-                .cgpa(studentProfile.getCgpa())
-                .phone(studentProfile.getPhone())
-                .githubLink(studentProfile.getGithubLink())
-                .linkedinLink(studentProfile.getLinkedinLink())
-                .resumeUrl(studentProfile.getResumeUrl())
-                .placementStatus(studentProfile.getPlacementStatus())
+                .rollNumber(profile.getRollNumber())
+                .gender(profile.getGender())
+                .dateOfBirth(profile.getDateOfBirth())
+                .year(profile.getYear())
+
+
+                // ============================
+                // Academic Details
+                // ============================
+
+                .sscPercentage(
+                        profile.getSscPercentage()
+                )
+
+                .intermediatePercentage(
+                        profile.getIntermediatePercentage()
+                )
+
+                .cgpa(profile.getCgpa())
+
+                .backlogs(
+                        profile.getBacklogs()
+                )
+
+                .firstAttemptInAllSemesters(
+                        profile.getFirstAttemptInAllSemesters()
+                )
+
+
+                // ============================
+                // Admission Details
+                // ============================
+
+                .admissionType(
+                        profile.getAdmissionType()
+                )
+
+                .entranceExam(
+                        profile.getEntranceExam()
+                )
+
+                .entranceRank(
+                        profile.getEntranceRank()
+                )
+
+
+                // ============================
+                // Contact Details
+                // ============================
+
+                .whatsappNumber(
+                        profile.getWhatsappNumber()
+                )
+
+                .personalEmail(
+                        profile.getPersonalEmail()
+                )
+
+                .parentContactNumber(
+                        profile.getParentContactNumber()
+                )
+
+                .parentEmail(
+                        profile.getParentEmail()
+                )
+
+
+                // ============================
+                // Personal Details
+                // ============================
+
+                .residenceType(
+                        profile.getResidenceType()
+                )
+
+                .aadhaarNumber(
+                        profile.getAadhaarNumber()
+                )
+
+                .panNumber(
+                        profile.getPanNumber()
+                )
+
+                .residentialAddress(
+                        profile.getResidentialAddress()
+                )
+
+                .bloodGroup(
+                        profile.getBloodGroup()
+                )
+
+
+                // ============================
+                // Professional Details
+                // ============================
+
+                .githubLink(
+                        profile.getGithubLink()
+                )
+
+                .linkedinLink(
+                        profile.getLinkedinLink()
+                )
+
+                .resumeUrl(
+                        profile.getResumeUrl()
+                )
+
+
+                // ============================
+                // Placement Details
+                // ============================
+
+                .placementStatus(
+                        profile.getPlacementStatus()
+                )
+
+                .graduated(
+                        profile.getGraduated()
+                )
+
+
+                // ============================
+                // Skills
+                // ============================
+
                 .skills(skillResponses)
+
                 .build();
     }
 

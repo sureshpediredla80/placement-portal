@@ -48,8 +48,8 @@ public class NotificationService {
                 .referenceId(referenceId)
                 .recipient(recipient)
                 .isRead(false)
+                .active(true)
                 .build();
-
         return notificationRepository.save(notification);
     }
 
@@ -104,7 +104,7 @@ public class NotificationService {
     public long getUnreadCount(Long userId) {
 
         return notificationRepository
-                .countByRecipientIdAndIsReadFalse(userId);
+                .countByRecipientIdAndIsReadFalseAndActiveTrue(userId);
     }
 
     /**

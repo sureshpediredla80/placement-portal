@@ -1,5 +1,6 @@
 package com.college.placement.controller;
 
+import com.college.placement.dto.request.StudentProfileAdminUpdateRequest;
 import com.college.placement.dto.request.StudentProfileUpdateRequest;
 import com.college.placement.dto.response.CompanyListResponse;
 import com.college.placement.dto.response.StudentProfileResponse;
@@ -292,9 +293,31 @@ public class StudentProfileController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN','COORDINATOR')")
+    @Operation(summary = "Update student profile by admin")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<StudentProfileResponse> updateStudentProfileByAdmin(
 
+            @PathVariable("studentId") Long studentId,
 
+            @Valid @RequestBody StudentProfileAdminUpdateRequest request
 
+    ) {
+
+        logger.info(
+                "REST request to update student profile. studentId={}",
+                studentId
+        );
+
+        StudentProfileResponse response =
+                studentProfileService.updateStudentProfileByAdmin(
+                        studentId,
+                        request
+                );
+
+        return ResponseEntity.ok(response);
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // F. GET ELIGIBLE COMPANIES
