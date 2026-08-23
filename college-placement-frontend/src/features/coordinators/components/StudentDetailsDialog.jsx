@@ -570,8 +570,8 @@ const StudentDetailsDialog = ({
                                                     color="#6A1B9A"
                                                 />
                                             }
-                                            title="Diploma CGPA"
-                                            value={student.diplomaCgpa}
+                                            title="Diploma Percentage"
+                                            value={student.diplomaPercentage}
                                         />
                                     </Grid>
 

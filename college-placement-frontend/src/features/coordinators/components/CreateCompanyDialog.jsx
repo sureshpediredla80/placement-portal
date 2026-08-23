@@ -37,23 +37,147 @@ const transformNumber = (value, originalValue) =>
     originalValue === "" || originalValue === null ? null : Number(value);
 
 const schema = yup.object({
-    companyName: yup.string().required("Company name is required"),
-    roleOffered: yup.string().required("Role is required"),
+    // =========================
+    // Company Information
+    // =========================
 
-    // Package Details
-    minimumPackage: yup.number().nullable().transform(transformNumber),
-    maximumPackage: yup.number().nullable().transform(transformNumber),
+    companyName: yup
+        .string()
+        .trim()
+        .required("Company name is required"),
 
+    roleOffered: yup
+        .string()
+        .trim()
+        .required("Role is required"),
+
+
+// Package Details
+    minimumPackage: yup
+        .number()
+        .transform(transformNumber)
+        .required("Minimum package is required")
+        .positive("Minimum package must be greater than 0"),
+
+    maximumPackage: yup
+        .number()
+        .transform(transformNumber)
+        .required("Maximum package is required")
+        .positive("Maximum package must be greater than 0")
+        .test(
+            "max-package",
+            "Maximum package cannot be less than minimum package",
+            function (value) {
+                const { minimumPackage } = this.parent;
+
+                if (value == null || minimumPackage == null) {
+                    return true;
+                }
+
+                return value >= minimumPackage;
+            }
+        ),
+
+
+    // =========================
     // Academic Details
-    minimumCgpa: yup.number().nullable().transform(transformNumber),
-    maximumCgpa: yup.number().nullable().transform(transformNumber),
-    minimumSscPercentage: yup.number().nullable().transform(transformNumber),
-    minimumInterPercentage: yup.number().nullable().transform(transformNumber),
-    minimumDiplomaCgpa: yup.number().nullable().transform(transformNumber),
-    maximumEmcetRank: yup.number().nullable().transform(transformNumber),
-    maximumEcetRank: yup.number().nullable().transform(transformNumber),
+    // =========================
 
-    // Booleans / Conditions
+    minimumCgpa: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .required("Minimum CGPA is required")
+        .min(0, "Minimum CGPA must be between 0 and 10")
+        .max(10, "Minimum CGPA must be between 0 and 10"),
+
+    maximumCgpa: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .min(0, "Maximum CGPA must be between 0 and 10")
+        .max(10, "Maximum CGPA must be between 0 and 10")
+        .test(
+            "maximum-cgpa",
+            "Maximum CGPA cannot be less than minimum CGPA",
+            function (value) {
+
+                const minimumCgpa =
+                    this.parent.minimumCgpa;
+
+                if (
+                    value === null ||
+                    value === undefined ||
+                    minimumCgpa === null ||
+                    minimumCgpa === undefined
+                ) {
+                    return true;
+                }
+
+                return value >= minimumCgpa;
+            }
+        ),
+
+    minimumSscPercentage: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .min(
+            0,
+            "SSC percentage must be between 0 and 100"
+        )
+        .max(
+            100,
+            "SSC percentage must be between 0 and 100"
+        ),
+
+    minimumInterPercentage: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .min(
+            0,
+            "Intermediate percentage must be between 0 and 100"
+        )
+        .max(
+            100,
+            "Intermediate percentage must be between 0 and 100"
+        ),
+
+    minimumDiplomaPercentage: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .min(
+            0,
+            "Diploma percentage must be between 0 and 100"
+        )
+        .max(
+            100,
+            "Diploma percentage must be between 0 and 100"
+        ),
+
+    maximumEmcetRank: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .positive(
+            "EAPCET rank must be greater than zero"
+        ),
+
+    maximumEcetRank: yup
+        .number()
+        .nullable()
+        .transform(transformNumber)
+        .positive(
+            "ECET rank must be greater than zero"
+        ),
+
+
+    // =========================
+    // Eligibility
+    // =========================
+
     backlogsAllowed: yup.boolean(),
 
     maximumAllowedBacklogs: yup
@@ -64,29 +188,131 @@ const schema = yup.object({
             is: true,
             then: (schema) =>
                 schema
-                    .required("Maximum allowed backlogs is required")
-                    .min(0, "Backlogs cannot be negative")
-                    .integer("Backlogs must be a whole number"),
-            otherwise: (schema) => schema.nullable(),
+                    .required(
+                        "Maximum allowed backlogs is required"
+                    )
+                    .min(
+                        1,
+                        "Maximum allowed backlogs must be at least 1"
+                    )
+                    .integer(
+                        "Backlogs must be a whole number"
+                    ),
+
+            otherwise: (schema) =>
+                schema.nullable(),
         }),
 
     firstAttemptRequired: yup.boolean(),
 
-    genderEligibility: yup.string().nullable().transform(v => v === "" ? null : v),
+    genderEligibility: yup
+        .string()
+        .nullable()
+        .transform((value) =>
+            value === "" ? null : value
+        ),
 
-    driveDate: yup.string().nullable().transform(v => v === "" ? null : v),
-    applyDeadline: yup.string().nullable().transform(v => v === "" ? null : v),
 
-    jobDescription: yup.string().nullable(),
-    preparationResources: yup.string().nullable(),
+    // =========================
+    // Schedule
+    // =========================
 
-    allowedBranchIds: yup.array().of(yup.number()),
-    allowedYears: yup.array().of(yup.number()),
+    driveDate: yup
+        .string()
+        .required("Drive date is required")
+        .test(
+            "future-drive-date",
+            "Drive date must be in the future",
+            (value) => {
 
-    allowAlreadyPlacedStudents: yup.boolean(),
-    maximumPreviousPackage: yup.number().nullable().transform(transformNumber),
-    includedCompanyIds: yup.array().of(yup.number()),
-    excludedCompanyIds: yup.array().of(yup.number()),
+                if (!value) {
+                    return true;
+                }
+
+                return new Date(value) > new Date();
+            }
+        ),
+
+    applyDeadline: yup
+        .string()
+        .required("Apply deadline is required")
+        .test(
+            "before-drive-date",
+            "Apply deadline must be before the drive date",
+            function (value) {
+
+                const driveDate =
+                    this.parent.driveDate;
+
+                if (!value || !driveDate) {
+                    return true;
+                }
+
+                return (
+                    new Date(value) <
+                    new Date(driveDate)
+                );
+            }
+        ),
+
+
+    // =========================
+    // Other Details
+    // =========================
+
+    jobDescription: yup
+        .string()
+        .nullable(),
+
+    preparationResources: yup
+        .string()
+        .nullable(),
+
+
+    // =========================
+    // Allowed Branches / Years
+    // =========================
+
+    allowedBranchIds: yup
+        .array()
+        .of(yup.number())
+        .min(
+            1,
+            "At least one allowed branch is required"
+        )
+        .required(
+            "Allowed branches are required"
+        ),
+
+    allowedYears: yup
+        .array()
+        .of(yup.number())
+        .min(
+            1,
+            "At least one allowed academic year is required"
+        )
+        .required(
+            "Allowed years are required"
+        ),
+
+
+    // =========================
+    // Previous Placement
+    // =========================
+
+    allowAlreadyPlacedStudents:
+        yup.boolean(),
+
+    maximumPreviousPackage: yup
+        .number()
+        .nullable()
+        .transform(transformNumber),
+
+    includedCompanyIds:
+        yup.array().of(yup.number()),
+
+    excludedCompanyIds:
+        yup.array().of(yup.number()),
 });
 
 const genderOptions = [
@@ -194,7 +420,8 @@ const CreateCompanyDialog = ({
         handleSubmit,
         reset,
         watch,
-        setValue
+        setValue,
+        formState: { errors }
     } = useForm({
         resolver: yupResolver(schema),
         defaultValues: {
@@ -210,7 +437,7 @@ const CreateCompanyDialog = ({
 
             minimumSscPercentage: null,
             minimumInterPercentage: null,
-            minimumDiplomaCgpa: null,
+            minimumDiplomaPercentage: null,
             maximumEmcetRank: null,
             maximumEcetRank: null,
 
@@ -266,7 +493,7 @@ const CreateCompanyDialog = ({
 
                     minimumSscPercentage: company.minimumSscPercentage ?? null,
                     minimumInterPercentage: company.minimumInterPercentage ?? null,
-                    minimumDiplomaCgpa: company.minimumDiplomaCgpa ?? null,
+                    minimumDiplomaPercentage: company.minimumDiplomaPercentage ?? null,
                     maximumEmcetRank: company.maximumEmcetRank ?? null,
                     maximumEcetRank: company.maximumEcetRank ?? null,
                     firstAttemptRequired: company.firstAttemptRequired || false,
@@ -324,10 +551,41 @@ const CreateCompanyDialog = ({
                 onClose();
             }, 1000);
         } catch (error) {
-            console.error(error);
+
+            console.error("Company save error:", error);
+
+            let message =
+                mode === "update"
+                    ? "Failed to update company"
+                    : "Failed to create company";
+
+            const responseData = error?.response?.data;
+
+            if (responseData) {
+
+                // Backend returned plain string
+                if (typeof responseData === "string") {
+
+                    message = responseData;
+                }
+
+                // Backend returned { message: "..." }
+                else if (responseData.message) {
+
+                    message = responseData.message;
+                }
+
+                // Backend returned { error: "..." }
+                else if (responseData.error) {
+
+                    message = responseData.error;
+                }
+            }
+
             setSnackbarSeverity("error");
-            setSnackbarMessage(mode === "update" ? "Failed to update company" : "Failed to create company");
+            setSnackbarMessage(message);
             setSnackbarOpen(true);
+
         } finally {
             setIsSubmitting(false);
         }
@@ -423,10 +681,10 @@ const CreateCompanyDialog = ({
                     <Divider />
                     <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
-                            <AppFormField control={control} name="minimumPackage" label="Minimum Package (LPA)" type="number" />
+                            <AppFormField control={control} name="minimumPackage" label="Minimum Package (LPA)*" type="number" />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <AppFormField control={control} name="maximumPackage" label="Maximum Package (LPA)" type="number" />
+                            <AppFormField control={control} name="maximumPackage" label="Maximum Package (LPA)*" type="number" />
                         </Grid>
                     </Grid>
 
@@ -448,7 +706,7 @@ const CreateCompanyDialog = ({
                             <AppFormField control={control} name="minimumInterPercentage" label="Minimum Inter %" type="number" />
                         </Grid>
                         <Grid item xs={12} md={4}>
-                            <AppFormField control={control} name="minimumDiplomaCgpa" label="Minimum Diploma CGPA" type="number" />
+                            <AppFormField control={control} name="minimumDiplomaPercentage" label="Minimum Diploma Percentage (%)" type="number" />
                         </Grid>
 
                         <Grid item xs={12} md={6}>
@@ -461,113 +719,146 @@ const CreateCompanyDialog = ({
 
                     {/* --- Eligibility --- */}
                     <Typography variant="h6">Eligibility</Typography>
-                    <Divider />
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} md={4}>
-                            <FormControl fullWidth size="medium">
-                                <InputLabel id="allowed-branches-label">Allowed Branches</InputLabel>
-                                <Select
-                                    labelId="allowed-branches-label"
-                                    multiple
-                                    value={selectedBranchIds}
-                                    label="Allowed Branches"
-                                    onChange={(e) => setValue("allowedBranchIds", e.target.value)}
-                                    renderValue={(selected) =>
-                                        branches
-                                            .filter((b) => selected.includes(b.id))
-                                            .map((b) => b.name)
-                                            .join(", ")
-                                    }
-                                >
-                                    {branches.map((branch) => (
-                                        <MenuItem key={branch.id} value={branch.id}>
-                                            <Checkbox checked={selectedBranchIds.includes(branch.id)} />
-                                            <ListItemText primary={branch.name} />
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
+                    <Divider /><Stack spacing={2}>
 
-                        <Grid item xs={12} md={4}>
-                            <FormControl fullWidth size="medium">
-                                <InputLabel id="allowed-years-label">Allowed Years</InputLabel>
-                                <Select
-                                    labelId="allowed-years-label"
-                                    multiple
-                                    value={selectedYears}
-                                    label="Allowed Years"
-                                    onChange={(e) => setValue("allowedYears", e.target.value)}
-                                    renderValue={(selected) => selected.map(y => `Year ${y}`).join(", ")}
-                                >
-                                    {[1, 2, 3, 4].map((year) => (
-                                        <MenuItem key={year} value={year}>
-                                            <Checkbox checked={selectedYears.includes(year)} />
-                                            <ListItemText primary={`Year ${year}`} />
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
+                    {/* Allowed Branches */}
+                    <FormControl fullWidth size="medium" error={!!errors.allowedBranchIds}>
+                        <InputLabel id="allowed-branches-label">
+                            Allowed Branches
+                        </InputLabel>
 
-                        <Grid item xs={12} md={4}>
-                            <AppSelectField
-                                control={control}
-                                name="genderEligibility"
-                                label="Gender Eligibility"
-                                options={genderOptions}
-                            />
-                        </Grid>
+                        <Select
+                            labelId="allowed-branches-label"
+                            multiple
+                            value={selectedBranchIds}
+                            label="Allowed Branches"
+                            onChange={(e) =>
+                                setValue("allowedBranchIds", e.target.value, {
+                                    shouldValidate: true,
+                                })
+                            }
+                            renderValue={(selected) =>
+                                branches
+                                    .filter((b) => selected.includes(b.id))
+                                    .map((b) => b.name)
+                                    .join(", ")
+                            }
+                        >
+                            {branches.map((branch) => (
+                                <MenuItem key={branch.id} value={branch.id}>
+                                    <Checkbox checked={selectedBranchIds.includes(branch.id)} />
+                                    <ListItemText primary={branch.name} />
+                                </MenuItem>
+                            ))}
+                        </Select>
 
-                        <Grid item xs={12} md={6}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={watch("backlogsAllowed")}
-                                        onChange={(e) => {
-                                            const allowed = e.target.checked;
-
-                                            setValue("backlogsAllowed", allowed);
-
-                                            // If backlogs are not allowed,
-                                            // clear maximum allowed backlog value
-                                            if (!allowed) {
-                                                setValue("maximumAllowedBacklogs", null);
-                                            }
-                                        }}
-                                    />
-                                }
-                                label="Backlogs Allowed"
-                            />
-                        </Grid>
-
-                        {watch("backlogsAllowed") && (
-                            <Grid item xs={12} md={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="maximumAllowedBacklogs"
-                                    label="Maximum Allowed Backlogs"
-                                    type="number"
-                                    inputProps={{
-                                        min: 0,
-                                        step: 1,
-                                    }}
-                                />
-                            </Grid>
+                        {errors.allowedBranchIds && (
+                            <Typography variant="caption" color="error" sx={{ ml: 2 }}>
+                                {errors.allowedBranchIds.message}
+                            </Typography>
                         )}
+                    </FormControl>
 
-                        <Grid item xs={12} md={6}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={watch("firstAttemptRequired")}
-                                        onChange={(e) => setValue("firstAttemptRequired", e.target.checked)}
-                                    />
-                                }
-                                label="First Attempt Required"
+                    {/* Allowed Years */}
+                    <FormControl fullWidth size="medium" error={!!errors.allowedYears}>
+                        <InputLabel id="allowed-years-label">Allowed Years</InputLabel>
+
+                        <Select
+                            labelId="allowed-years-label"
+                            multiple
+                            value={selectedYears}
+                            label="Allowed Years"
+                            onChange={(e) =>
+                                setValue("allowedYears", e.target.value, {
+                                    shouldValidate: true,
+                                })
+                            }
+                            renderValue={(selected) => (
+                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                    {selected.map((value) => (
+                                        <Box
+                                            key={value}
+                                            sx={{
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: "16px",
+                                                backgroundColor: "primary.main",
+                                                color: "#fff",
+                                                fontSize: "0.8rem",
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            Year {value}
+                                        </Box>
+                                    ))}
+                                </Box>
+                            )}
+                        >
+                            {[1, 2, 3, 4].map((year) => (
+                                <MenuItem key={year} value={year}>
+                                    <Checkbox checked={selectedYears.includes(year)} />
+                                    <ListItemText primary={`Year ${year}`} />
+                                </MenuItem>
+                            ))}
+                        </Select>
+
+                        {errors.allowedYears && (
+                            <Typography variant="caption" color="error" sx={{ ml: 2 }}>
+                                {errors.allowedYears.message}
+                            </Typography>
+                        )}
+                    </FormControl>
+
+                    {/* Gender */}
+                    <AppSelectField
+                        control={control}
+                        name="genderEligibility"
+                        label="Gender Eligibility"
+                        options={genderOptions}
+                    />
+
+                    {/* Backlogs */}
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={watch("backlogsAllowed")}
+                                onChange={(e) => {
+                                    const allowed = e.target.checked;
+                                    setValue("backlogsAllowed", allowed);
+
+                                    if (!allowed) {
+                                        setValue("maximumAllowedBacklogs", null);
+                                    }
+                                }}
                             />
-                        </Grid>
-                    </Grid>
+                        }
+                        label="Backlogs Allowed"
+                    />
+
+                    {/* Max Backlogs */}
+                    {watch("backlogsAllowed") && (
+                        <AppFormField
+                            control={control}
+                            name="maximumAllowedBacklogs"
+                            label="Maximum Allowed Backlogs"
+                            type="number"
+                        />
+                    )}
+
+                    {/* First Attempt */}
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={watch("firstAttemptRequired")}
+                                onChange={(e) =>
+                                    setValue("firstAttemptRequired", e.target.checked)
+                                }
+                            />
+                        }
+                        label="First Attempt Required"
+                    />
+
+                </Stack>
 
                     {/* --- Placement Rules --- */}
                     <Typography variant="h6">Placement Rules</Typography>

@@ -27,6 +27,7 @@ public class CompanyRequest {
     @Positive(message = "Minimum package must be greater than 0")
     private BigDecimal minimumPackage;
 
+    @NotNull(message = "Maximum package is required")
     @Positive(message = "Maximum package must be greater than 0")
     private BigDecimal maximumPackage;
 
@@ -45,7 +46,7 @@ public class CompanyRequest {
 
     private Double minimumInterPercentage;
 
-    private Double minimumDiplomaCgpa;
+    private Double minimumDiplomaPercentage;
 
     private Integer maximumEmcetRank;
     private Integer maximumEcetRank;

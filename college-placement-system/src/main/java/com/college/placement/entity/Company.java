@@ -91,8 +91,8 @@ public class Company {
     private Double minimumSscPercentage;
     @Column(name = "minimum_inter_percentage")
     private Double minimumInterPercentage;
-    @Column(name = "minimum_diploma_cgpa")
-    private Double minimumDiplomaCgpa;
+    @Column(name = "minimum_diploma_percentage")
+    private Double minimumDiplomaPercentage;
     @Column(name = "maximum_emcet_rank")
     private Integer maximumEmcetRank;
 

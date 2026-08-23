@@ -25,3 +25,17 @@ export const getMyApplications = async (
 
     return response.data;
 };
+
+export const getPlacedStudentsShowcase = async (year = null, page = 0, size = 50) => {
+    const params = { page, size };
+    if (year && year !== "ALL") {
+        params.year = year;
+    }
+    const response = await axiosInstance.get("/api/applications/placed-students", { params });
+    return response.data;
+};
+
+export const getAvailablePlacementYears = async () => {
+    const response = await axiosInstance.get("/api/applications/placed-students/years");
+    return response.data;
+};

@@ -409,8 +409,8 @@ const StudentProfilePage = () => {
                                     <Grid item xs={12} md={4}>
                                         <InfoCard
                                             icon={<FaGraduationCap size={28} />}
-                                            title="Diploma CGPA"
-                                            value={student?.diplomaCgpa}
+                                            title="Diploma Percentage"
+                                            value={student?.diplomaPercentage}
                                         />
                                     </Grid>
                                     <Grid item xs={12} md={4}><InfoCard icon={<FaGraduationCap size={28} />} iconColor="#FF9800" title="SSC Percentage" value={student?.sscPercentage} /></Grid>

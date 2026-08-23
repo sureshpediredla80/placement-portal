@@ -1,23 +1,28 @@
 package com.college.placement.service;
-
+import com.college.placement.repository.CompanyRepository;
+import com.college.placement.repository.StudentProfileRepository;
 import com.college.placement.entity.*;
 import com.college.placement.exception.BadRequestException;
 import com.college.placement.repository.PlacementApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import com.college.placement.dto.response.CompanyStudentEligibilityResponse;
+import com.college.placement.dto.response.CompanyDriveEligibleStudentsResponse;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
+import com.college.placement.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
 public class CompanyEligibilityService {
 
     private final PlacementApplicationRepository placementApplicationRepository;
-
-
+    private final StudentProfileRepository studentProfileRepository;
+    private final CompanyRepository companyRepository;
     /**
      * Returns true if student is eligible for the company drive.
      *
@@ -28,21 +33,31 @@ public class CompanyEligibilityService {
             StudentProfile student,
             Company company
     ) {
+        return checkEligibility(student, company, true);
+    }
+
+    public CompanyEligibilityResult checkEligibility(
+            StudentProfile student,
+            Company company,
+            boolean checkDeadline
+    ) {
 
         // ============================================================
         // 1. APPLICATION DEADLINE
         // ============================================================
 
-        if (company.getApplyDeadline() == null) {
-            return CompanyEligibilityResult.notEligible(
-                    "Application deadline is not configured for this company drive."
-            );
-        }
+        if (checkDeadline) {
+            if (company.getApplyDeadline() == null) {
+                return CompanyEligibilityResult.notEligible(
+                        "Application deadline is not configured for this company drive."
+                );
+            }
 
-        if (company.getApplyDeadline().isBefore(LocalDateTime.now())) {
-            return CompanyEligibilityResult.notEligible(
-                    "The application deadline for this company drive has passed."
-            );
+            if (company.getApplyDeadline().isBefore(LocalDateTime.now())) {
+                return CompanyEligibilityResult.notEligible(
+                        "The application deadline for this company drive has passed."
+                );
+            }
         }
 
 
@@ -280,23 +295,23 @@ public class CompanyEligibilityService {
         // ============================================================
         // 10. DIPLOMA
         // ============================================================
-        if (company.getMinimumDiplomaCgpa() != null) {
+        if (company.getMinimumDiplomaPercentage() != null) {
 
-            if (student.getDiplomaCgpa() == null) {
+            if (student.getDiplomaPercentage() == null) {
 
                 return CompanyEligibilityResult.notEligible(
-                        "Your Diploma CGPA is not available in your profile."
+                        "Your Diploma percentage is not available in your profile."
                 );
             }
 
-            if (student.getDiplomaCgpa()
-                    < company.getMinimumDiplomaCgpa()) {
+            if (student.getDiplomaPercentage()
+                    < company.getMinimumDiplomaPercentage()) {
 
                 return CompanyEligibilityResult.notEligible(
-                        "Your Diploma CGPA is "
-                                + student.getDiplomaCgpa()
-                                + ", but the minimum required CGPA is "
-                                + company.getMinimumDiplomaCgpa() + "."
+                        "Your Diploma percentage is "
+                                + student.getDiplomaPercentage()
+                                + "%, but the minimum required percentage is "
+                                + company.getMinimumDiplomaPercentage() + "%."
                 );
             }
         }
@@ -521,29 +536,110 @@ public class CompanyEligibilityService {
 
             boolean packageExceeded =
                     selectedApplications.stream()
-
                             .map(application ->
                                     application.getCompany()
                                             .getMaximumPackage())
-
                             .filter(Objects::nonNull)
-
                             .anyMatch(previousPackage ->
-                                    previousPackage.compareTo(
-                                            maximumAllowed
-                                    ) > 0
+                                    previousPackage.compareTo(maximumAllowed) > 0
                             );
 
             if (packageExceeded) {
 
+                BigDecimal maximumAllowedLpa =
+                        maximumAllowed.divide(
+                                BigDecimal.valueOf(100_000)
+                        );
+
                 return CompanyEligibilityResult.notEligible(
                         "You are not eligible because your previous placement package exceeds "
-                                + maximumAllowed + " LPA."
+                                + maximumAllowedLpa.setScale(2, RoundingMode.HALF_UP)
+                                + " LPA."
                 );
             }
         }
 
 
         return CompanyEligibilityResult.eligible();
+    }
+
+    /**
+     * Evaluates all student profiles dynamically against the company's eligibility criteria
+     * and returns summary statistics along with the list of eligible students with their application status for this drive.
+     *
+     * @param companyId the ID of the company drive
+     * @return CompanyDriveEligibleStudentsResponse DTO containing statistics and list of eligible students
+     */
+    @Transactional(readOnly = true)
+    public CompanyDriveEligibleStudentsResponse getEligibleStudentsForCompany(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company drive not found with ID: " + companyId));
+
+        List<StudentProfile> allStudents = studentProfileRepository.findAll();
+        List<PlacementApplication> applications = placementApplicationRepository.findByCompanyId(companyId);
+
+        Map<Long, String> applicationStatusMap = applications.stream()
+                .filter(app -> app.getStudent() != null)
+                .collect(Collectors.toMap(
+                        app -> app.getStudent().getId(),
+                        app -> app.getStatus() != null ? app.getStatus().name() : "APPLIED",
+                        (existing, replacement) -> existing
+                ));
+
+        List<CompanyStudentEligibilityResponse> eligibleStudents = new ArrayList<>();
+        int totalApplied = 0;
+        int totalNotApplied = 0;
+        int totalSelected = 0;
+        int totalRejected = 0;
+
+        for (StudentProfile student : allStudents) {
+            String studentName = student.getUser() != null ? student.getUser().getFullName() : null;
+            String email = student.getUser() != null ? student.getUser().getEmail() : null;
+
+            if (applicationStatusMap.containsKey(student.getId())) {
+                String status = applicationStatusMap.get(student.getId());
+
+                if ("SELECTED".equalsIgnoreCase(status)) {
+                    totalSelected++;
+                } else if ("REJECTED".equalsIgnoreCase(status)) {
+                    totalRejected++;
+                } else {
+                    totalApplied++;
+                }
+
+                eligibleStudents.add(CompanyStudentEligibilityResponse.buildResponse(
+                        student.getId(),
+                        studentName,
+                        email,
+                        student.getRollNumber(),
+                        status
+                ));
+            } else {
+                CompanyEligibilityResult result = checkEligibility(student, company, false);
+                if (result.isEligible()) {
+                    totalNotApplied++;
+                    eligibleStudents.add(CompanyStudentEligibilityResponse.buildResponse(
+                            student.getId(),
+                            studentName,
+                            email,
+                            student.getRollNumber(),
+                            "Eligible & Not Applied"
+                    ));
+                }
+            }
+        }
+
+        eligibleStudents.sort(Comparator.comparing(CompanyStudentEligibilityResponse::getRoll, Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return CompanyDriveEligibleStudentsResponse.builder()
+                .companyId(company.getId())
+                .companyName(company.getCompanyName())
+                .totalEligibleStudents(eligibleStudents.size())
+                .totalApplied(totalApplied)
+                .totalNotApplied(totalNotApplied)
+                .totalSelected(totalSelected)
+                .totalRejected(totalRejected)
+                .eligibleStudents(eligibleStudents)
+                .build();
     }
 }

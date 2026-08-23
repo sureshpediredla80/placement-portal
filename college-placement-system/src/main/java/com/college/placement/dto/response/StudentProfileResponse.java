@@ -32,7 +32,7 @@ public class StudentProfileResponse {
 
     private Double sscPercentage;
     private Double intermediatePercentage;
-    private Double diplomaCgpa;
+    private Double diplomaPercentage;
     private Double cgpa;
     private Integer backlogs;
     private Boolean firstAttemptInAllSemesters;

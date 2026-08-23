@@ -73,8 +73,8 @@ AND (
         OR s.intermediatePercentage >= :minimumInterPercentage
 )
 AND (
-        :minimumDiplomaCgpa IS NULL
-        OR s.diplomaCgpa >= :minimumDiplomaCgpa
+        :minimumDiplomaPercentage IS NULL
+        OR s.diplomaPercentage >= :minimumDiplomaPercentage
 )
 AND (
       s.entranceExam IS NULL
@@ -121,7 +121,7 @@ AND s.placementStatus IN :allowedStatuses
             @Param("gender") Gender gender,
             @Param("minimumSscPercentage") Double minimumSscPercentage,
             @Param("minimumInterPercentage") Double minimumInterPercentage,
-            @Param("minimumDiplomaCgpa") Double minimumDiplomaCgpa,
+            @Param("minimumDiplomaPercentage") Double minimumDiplomaPercentage,
             @Param("maximumEmcetRank") Integer maximumEmcetRank,
             @Param("maximumEcetRank") Integer maximumEcetRank,
             @Param("firstAttemptRequired") Boolean firstAttemptRequired,

@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 @Repository
 public interface PlacementApplicationRepository extends JpaRepository<PlacementApplication, Long> {
+    Page<PlacementApplication> findByStatus(ApplicationStatus status, Pageable pageable);
     Page<PlacementApplication> findByStudentId(Long studentId, Pageable pageable);
     Page<PlacementApplication> findByCompanyId(Long companyId, Pageable pageable);
     Page<PlacementApplication> findByCompanyIdAndStatus(Long companyId, ApplicationStatus status, Pageable pageable);

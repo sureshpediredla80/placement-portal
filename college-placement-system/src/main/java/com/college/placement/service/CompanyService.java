@@ -36,6 +36,8 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
     private final BranchRepository branchRepository;
 private final NotificationService notificationService;
+    private static final BigDecimal LPA_MULTIPLIER =
+            BigDecimal.valueOf(100_000);
     /**
      * Creates a new Company placement drive in the system.
      * Performs strict business validation on drive dates, package offerings, and academic branch requirements.
@@ -59,9 +61,20 @@ private final NotificationService notificationService;
             throw new BadRequestException("Minimum package must be positive.");
         }
 
-        if (request.getMaximumPackage() != null &&
-                request.getMaximumPackage().compareTo(request.getMinimumPackage()) < 0) {
-            throw new BadRequestException("Maximum package cannot be less than minimum package.");
+        if (request.getMaximumPackage() == null ||
+                request.getMaximumPackage().compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new BadRequestException(
+                    "Maximum package is required and must be greater than 0."
+            );
+        }
+
+        if (request.getMaximumPackage()
+                .compareTo(request.getMinimumPackage()) < 0) {
+
+            throw new BadRequestException(
+                    "Maximum package cannot be less than minimum package."
+            );
         }
 
         validateCgpa(request.getMinimumCgpa(), request.getMaximumCgpa());
@@ -97,16 +110,28 @@ private final NotificationService notificationService;
         // Resolving allowed branch entities
         Set<Branch> allowedBranches = loadBranches(request.getAllowedBranchIds());
 
+        BigDecimal minimumPackageInRupees =
+                convertLpaToRupees(request.getMinimumPackage());
+
+        BigDecimal maximumPackageInRupees =
+                convertLpaToRupees(request.getMaximumPackage());
+        BigDecimal maximumPreviousPackageInRupees = null;
+
+        if (request.getMaximumPreviousPackage() != null) {
+            maximumPreviousPackageInRupees =
+                    convertLpaToRupees(request.getMaximumPreviousPackage());
+        }
+
         Company company = Company.builder()
                 .companyName(request.getCompanyName().trim())
                 .roleOffered(request.getRoleOffered().trim())
-                .minimumPackage(request.getMinimumPackage())
-                .maximumPackage(request.getMaximumPackage())
+                .minimumPackage(minimumPackageInRupees)
+                .maximumPackage(maximumPackageInRupees)
                 .minimumCgpa(request.getMinimumCgpa())
                 .maximumCgpa(request.getMaximumCgpa())
                 .minimumSscPercentage(request.getMinimumSscPercentage())
                 .minimumInterPercentage(request.getMinimumInterPercentage())
-                .minimumDiplomaCgpa(request.getMinimumDiplomaCgpa())
+                .minimumDiplomaPercentage(request.getMinimumDiplomaPercentage())
                 .maximumEmcetRank(request.getMaximumEmcetRank())
                 .maximumEcetRank(request.getMaximumEcetRank())
                 .firstAttemptRequired(request.getFirstAttemptRequired())
@@ -119,8 +144,7 @@ private final NotificationService notificationService;
                 .preparationResources(request.getPreparationResources() != null ? request.getPreparationResources() : new HashSet<>())
                 .allowedBranches(allowedBranches)
                 .allowedYears(request.getAllowedYears() != null ? request.getAllowedYears() : new HashSet<>())
-                .maximumPreviousPackage(
-                        request.getMaximumPreviousPackage())
+                .maximumPreviousPackage(maximumPreviousPackageInRupees)
 
                 .allowAlreadyPlacedStudents(
                         request.getAllowAlreadyPlacedStudents() != null
@@ -191,28 +215,52 @@ private final NotificationService notificationService;
 
         if (request.getMinimumPackage() != null) {
 
-            if (request.getMinimumPackage().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new BadRequestException("Minimum package must be positive.");
-            }
+            if (request.getMinimumPackage()
+                    .compareTo(BigDecimal.ZERO) <= 0) {
 
-            company.setMinimumPackage(request.getMinimumPackage());
+                throw new BadRequestException(
+                        "Minimum package must be greater than 0."
+                );
+            }
         }
 
         BigDecimal minimumPackage =
                 request.getMinimumPackage() != null
-                        ? request.getMinimumPackage()
+                        ? request.getMinimumPackage().multiply(LPA_MULTIPLIER)
                         : company.getMinimumPackage();
 
         BigDecimal maximumPackage =
                 request.getMaximumPackage() != null
-                        ? request.getMaximumPackage()
+                        ? request.getMaximumPackage().multiply(LPA_MULTIPLIER)
                         : company.getMaximumPackage();
 
-        if (maximumPackage != null &&
-                maximumPackage.compareTo(minimumPackage) < 0) {
+
+// Minimum package must exist
+        if (minimumPackage == null ||
+                minimumPackage.compareTo(BigDecimal.ZERO) <= 0) {
 
             throw new BadRequestException(
-                    "Maximum package cannot be less than minimum package.");
+                    "Minimum package is required and must be greater than 0."
+            );
+        }
+
+
+// Maximum package must exist
+        if (maximumPackage == null ||
+                maximumPackage.compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new BadRequestException(
+                    "Maximum package is required and must be greater than 0."
+            );
+        }
+
+
+// Maximum package cannot be less than minimum
+        if (maximumPackage.compareTo(minimumPackage) < 0) {
+
+            throw new BadRequestException(
+                    "Maximum package cannot be less than minimum package."
+            );
         }
 
         company.setMinimumPackage(minimumPackage);
@@ -252,12 +300,21 @@ private final NotificationService notificationService;
         }
         if (request.getMaximumPreviousPackage() != null) {
             company.setMaximumPreviousPackage(
-                    request.getMaximumPreviousPackage());
+                    request.getMaximumPreviousPackage()
+                            .multiply(LPA_MULTIPLIER)
+            );
         }
-
         if (request.getAllowAlreadyPlacedStudents() != null) {
+
             company.setAllowAlreadyPlacedStudents(
-                    request.getAllowAlreadyPlacedStudents());
+                    request.getAllowAlreadyPlacedStudents()
+            );
+
+            if (Boolean.FALSE.equals(request.getAllowAlreadyPlacedStudents())) {
+                company.setMaximumPreviousPackage(null);
+                company.getIncludedPreviousCompanyIds().clear();
+                company.getExcludedPreviousCompanyIds().clear();
+            }
         }
 
         if (request.getIncludedCompanyIds() != null) {
@@ -289,9 +346,9 @@ private final NotificationService notificationService;
             company.setMinimumInterPercentage(request.getMinimumInterPercentage());
         }
 
-        if (request.getMinimumDiplomaCgpa() != null) {
-            company.setMinimumDiplomaCgpa(
-                    request.getMinimumDiplomaCgpa());
+        if (request.getMinimumDiplomaPercentage() != null) {
+            company.setMinimumDiplomaPercentage(
+                    request.getMinimumDiplomaPercentage());
         }
 
         if (request.getMaximumEmcetRank() != null) {
@@ -350,7 +407,7 @@ private final NotificationService notificationService;
                 CompanyRequest.builder()
                         .minimumSscPercentage(company.getMinimumSscPercentage())
                         .minimumInterPercentage(company.getMinimumInterPercentage())
-                        .minimumDiplomaCgpa(company.getMinimumDiplomaCgpa())
+                        .minimumDiplomaPercentage(company.getMinimumDiplomaPercentage())
                         .build()
         );
         validateBacklogCriteria(
@@ -689,13 +746,13 @@ private final NotificationService notificationService;
             }
         }
 
-        if (request.getMinimumDiplomaCgpa() != null) {
+        if (request.getMinimumDiplomaPercentage() != null) {
 
-            if (request.getMinimumDiplomaCgpa() < 0
-                    || request.getMinimumDiplomaCgpa() > 10) {
+            if (request.getMinimumDiplomaPercentage() < 0
+                    || request.getMinimumDiplomaPercentage() > 100) {
 
                 throw new BadRequestException(
-                        "Diploma CGPA must be between 0 and 10.");
+                        "Diploma percentage must be between 0 and 100.");
             }
         }
     }
@@ -738,8 +795,12 @@ private final NotificationService notificationService;
                 .id(company.getId())
                 .companyName(company.getCompanyName())
                 .roleOffered(company.getRoleOffered())
-                .minimumPackage(company.getMinimumPackage())
-                .maximumPackage(company.getMaximumPackage())
+                .minimumPackage(
+                        convertRupeesToLpa(company.getMinimumPackage())
+                )
+                .maximumPackage(
+                        convertRupeesToLpa(company.getMaximumPackage())
+                )
                 .minimumCgpa(company.getMinimumCgpa())
                 .maximumCgpa(company.getMaximumCgpa())
                 .backlogsAllowed(company.getBacklogsAllowed())
@@ -748,7 +809,7 @@ private final NotificationService notificationService;
                 )
                 .minimumSscPercentage(company.getMinimumSscPercentage())
                 .minimumInterPercentage(company.getMinimumInterPercentage())
-                .minimumDiplomaCgpa(company.getMinimumDiplomaCgpa())
+                .minimumDiplomaPercentage(company.getMinimumDiplomaPercentage())
                 .maximumEmcetRank(company.getMaximumEmcetRank())
                 .maximumEcetRank(company.getMaximumEcetRank())
                 .firstAttemptRequired(company.getFirstAttemptRequired())
@@ -760,7 +821,10 @@ private final NotificationService notificationService;
                 .allowedBranches(allowedBranchesMapped)
                 .allowedYears(new HashSet<>(company.getAllowedYears()))
                 .maximumPreviousPackage(
-                        company.getMaximumPreviousPackage())
+                        convertRupeesToLpa(
+                                company.getMaximumPreviousPackage()
+                        )
+                )
 
                 .allowAlreadyPlacedStudents(
                         company.getAllowAlreadyPlacedStudents())
@@ -780,8 +844,12 @@ private final NotificationService notificationService;
                 .id(company.getId())
                 .companyName(company.getCompanyName())
                 .roleOffered(company.getRoleOffered())
-                .minimumPackage(company.getMinimumPackage())
-                .maximumPackage(company.getMaximumPackage())
+                .minimumPackage(
+                        convertRupeesToLpa(company.getMinimumPackage())
+                )
+                .maximumPackage(
+                        convertRupeesToLpa(company.getMaximumPackage())
+                )
                 .applyDeadline(company.getApplyDeadline())
                 .build();
     }
@@ -800,5 +868,24 @@ private final NotificationService notificationService;
                 .code(branch.getCode())
                 .department(branch.getDepartment())
                 .build();
+    }
+    private BigDecimal convertLpaToRupees(BigDecimal lpa) {
+        if (lpa == null) {
+            return null;
+        }
+
+        return lpa.multiply(LPA_MULTIPLIER);
+    }
+
+    private BigDecimal convertRupeesToLpa(BigDecimal rupees) {
+        if (rupees == null) {
+            return null;
+        }
+
+        return rupees.divide(
+                LPA_MULTIPLIER,
+                2,
+                java.math.RoundingMode.HALF_UP
+        );
     }
 }

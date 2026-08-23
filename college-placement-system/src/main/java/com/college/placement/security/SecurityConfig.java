@@ -25,7 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class SecurityConfig {
+public class SecurityConfig { 
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
@@ -141,7 +141,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/applications").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/applications/*/status").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
 
-                    .requestMatchers(HttpMethod.GET, "/api/topics/**", "/api/sessions/**", "/api/news/**", "/api/notifications/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/applications/placed-students", "/api/topics/**", "/api/sessions/**", "/api/news/**", "/api/notifications/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/topics", "/api/sessions", "/api/news").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/topics/**", "/api/sessions/**", "/api/news/**").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/topics/**", "/api/sessions/**", "/api/news/**").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")

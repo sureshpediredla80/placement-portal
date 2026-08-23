@@ -205,16 +205,29 @@ export const getApplicationsByCompany = async (
     companyId,
     status
 ) => {
+    const params = {
+        page: 0,
+        size: 100,
+        sort: "id,DESC",
+    };
+
+    if (status && status !== "ALL") {
+        params.status = status;
+    }
+
     const response = await axiosInstance.get(
         `/api/applications/company/${companyId}`,
-        {
-            params: {
-                status,
-                page: 0,
-                size: 10,
-                sort: "id,DESC",
-            },
-        }
+        { params }
+    );
+
+    return response.data;
+};
+
+export const getEligibleStudentsForCompany = async (
+    companyId
+) => {
+    const response = await axiosInstance.get(
+        `/api/companies/${companyId}/eligible-students`
     );
 
     return response.data;

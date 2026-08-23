@@ -25,7 +25,7 @@ public class CompanyResponse {
 
     private Double minimumInterPercentage;
 
-    private Double minimumDiplomaCgpa;
+    private Double minimumDiplomaPercentage;
 
     private Integer maximumEmcetRank;
     private Integer maximumEcetRank;

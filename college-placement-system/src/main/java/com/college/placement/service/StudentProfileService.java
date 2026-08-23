@@ -230,13 +230,8 @@ public class StudentProfileService {
             profile.setSscPercentage(request.getSscPercentage());
         }
 
-        if (request.getIntermediatePercentage() != null) {
-            profile.setIntermediatePercentage(request.getIntermediatePercentage());
-        }
-
-        if (request.getDiplomaCgpa() != null) {
-            profile.setDiplomaCgpa(request.getDiplomaCgpa());
-        }
+        profile.setIntermediatePercentage(request.getIntermediatePercentage());
+        profile.setDiplomaPercentage(request.getDiplomaPercentage());
 
         if (request.getCgpa() != null) {
 
@@ -629,7 +624,7 @@ public class StudentProfileService {
                 // Academic Details
                 .sscPercentage(profile.getSscPercentage())
                 .intermediatePercentage(profile.getIntermediatePercentage())
-                .diplomaCgpa(profile.getDiplomaCgpa())
+                .diplomaPercentage(profile.getDiplomaPercentage())
                  // NEW
                 .cgpa(profile.getCgpa())
                 .backlogs(profile.getBacklogs())

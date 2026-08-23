@@ -22,6 +22,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Arrays;
 import java.util.List;
 import com.college.placement.dto.response.PreviousCompanyResponse;
+import com.college.placement.dto.response.CompanyStudentEligibilityResponse;
+import com.college.placement.dto.response.CompanyDriveEligibleStudentsResponse;
+import com.college.placement.service.CompanyEligibilityService;
+
 /**
  * REST Controller exposing placement recruitment drive APIs.
  * Supports CRUD operations, role-based authorization, dynamic filtering, and paginated sorting.
@@ -35,6 +39,7 @@ import com.college.placement.dto.response.PreviousCompanyResponse;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final CompanyEligibilityService companyEligibilityService;
 
     // Allowed whitelist fields for company sorting
     private static final List<String> ALLOWED_SORT_FIELDS = Arrays.asList(
@@ -299,6 +304,27 @@ public class CompanyController {
 
         List<PreviousCompanyResponse> response =
                 companyService.getPreviousCompanyDrives(year);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves all eligible students and summary statistics for a specific company recruitment drive.
+     *
+     * @param companyId the ID of the company drive
+     * @return ResponseEntity containing CompanyDriveEligibleStudentsResponse and HTTP 200 OK status
+     */
+    @GetMapping("/{companyId}/eligible-students")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
+    @Operation(summary = "Get all eligible students and summary statistics for a company drive")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<CompanyDriveEligibleStudentsResponse> getEligibleStudentsForCompany(
+            @PathVariable("companyId") Long companyId) {
+
+        log.info("REST request to fetch eligible students and summary statistics for company drive ID: {}", companyId);
+
+        CompanyDriveEligibleStudentsResponse response =
+                companyEligibilityService.getEligibleStudentsForCompany(companyId);
 
         return ResponseEntity.ok(response);
     }

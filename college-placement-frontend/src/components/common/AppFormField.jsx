@@ -64,6 +64,7 @@ const AppFormField = ({
         return (
           <TextField
             {...field}
+            value={field.value ?? ""}
             label={label}
             type={type}
             required={required}

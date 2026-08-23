@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.college.placement.repository.ApplicationStatusHistoryRepository;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.*;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -23,8 +24,13 @@ import com.college.placement.entity.ApplicationStatusHistory;
 
 import java.util.stream.Collectors;
 import com.college.placement.dto.response.BulkResultUploadResponse;
+import com.college.placement.dto.response.PlacedStudentShowcaseResponse;
+import com.college.placement.dto.response.PlacedCompanyOfferResponse;
+import com.college.placement.dto.response.PlacedStudentCertificateResponse;
+import com.college.placement.entity.CertificateStatus;
 import org.springframework.web.multipart.MultipartFile;
 import com.college.placement.entity.GenderEligibility;
+import java.math.RoundingMode;
 /**
  * Service class handling all business operations for student placement drive applications.
  * Enforces profile completion validation, drive eligibility criteria, unique applications,
@@ -45,23 +51,16 @@ public class ApplicationService {
     private final ExcelImportService excelImportService;
     private final EmailService emailService;
     private final CompanyEligibilityService companyEligibilityService;
-    // Concurrent in-memory map to store rejection remarks without violating entity modification constraints
+    private final CertificateRepository certificateRepository;
 
-    /**
-     * Constructor injection for required repositories.
-     *
-     * @param placementApplicationRepository repository for application tracking
-     * @param studentProfileRepository repository for student profile checks
-     * @param companyRepository repository for company details
-     * @param userRepository repository for user credential lookup
-     */
     public ApplicationService(PlacementApplicationRepository placementApplicationRepository,
                               StudentProfileRepository studentProfileRepository,
                               CompanyRepository companyRepository,
                               UserRepository userRepository,ApplicationStatusHistoryRepository historyRepository,
                               ExcelImportService excelImportService,
                               EmailService emailService,
-                              CompanyEligibilityService companyEligibilityService)
+                              CompanyEligibilityService companyEligibilityService,
+                              CertificateRepository certificateRepository)
     {
         this.placementApplicationRepository = placementApplicationRepository;
         this.studentProfileRepository = studentProfileRepository;
@@ -71,6 +70,7 @@ public class ApplicationService {
         this.excelImportService = excelImportService;
         this.emailService = emailService;
         this.companyEligibilityService = companyEligibilityService;
+        this.certificateRepository = certificateRepository;
     }
 
 
@@ -849,5 +849,136 @@ public class ApplicationService {
                 .packageOffered(company != null ? company.getMinimumPackage() : null)
                 .driveDate(company != null ? company.getDriveDate() : null)
                 .build();
+    }
+
+    /**
+     * Retrieves all selected/placed students grouped into rich showcase profiles.
+     * Includes all company selection offers, verified student certifications, yearly placement filter,
+     * and technical skill tags while protecting private PII.
+     *
+     * @param year optional placement year filter
+     * @param pageable pagination parameters
+     * @return Page of PlacedStudentShowcaseResponse
+     */
+    @Transactional(readOnly = true)
+    public Page<PlacedStudentShowcaseResponse> getPlacedStudentsShowcase(Integer year, Pageable pageable) {
+        log.info("Retrieving placed students showcase with year filter: {}", year);
+
+        List<PlacementApplication> allSelectedApps = placementApplicationRepository
+                .findAll()
+                .stream()
+                .filter(app -> app.getStatus() == ApplicationStatus.SELECTED && app.getStudent() != null)
+                .collect(Collectors.toList());
+
+        Map<Long, List<PlacementApplication>> studentAppsMap = allSelectedApps.stream()
+                .collect(Collectors.groupingBy(app -> app.getStudent().getId()));
+
+        List<PlacedStudentShowcaseResponse> showcaseList = new ArrayList<>();
+
+        for (Map.Entry<Long, List<PlacementApplication>> entry : studentAppsMap.entrySet()) {
+            List<PlacementApplication> studentApps = entry.getValue();
+            if (studentApps.isEmpty()) continue;
+
+            PlacementApplication firstApp = studentApps.get(0);
+            StudentProfile student = firstApp.getStudent();
+            if (student == null) continue;
+
+            Integer studentPlacementYear = studentApps.stream()
+                    .map(app -> app.getApplicationDate() != null ? app.getApplicationDate().getYear() : LocalDate.now().getYear())
+                    .max(Comparator.naturalOrder())
+                    .orElse(LocalDate.now().getYear());
+
+            if (year != null && !year.equals(studentPlacementYear)) {
+                continue;
+            }
+
+            List<PlacedCompanyOfferResponse> companyOffers = new ArrayList<>();
+            BigDecimal highestPackageLpa = BigDecimal.ZERO;
+
+            for (PlacementApplication app : studentApps) {
+                Company company = app.getCompany();
+                BigDecimal packageLpa = BigDecimal.ZERO;
+
+                if (company != null && company.getMaximumPackage() != null) {
+                    packageLpa = company.getMaximumPackage().divide(BigDecimal.valueOf(100_000), 2, RoundingMode.HALF_UP);
+                } else if (company != null && company.getMinimumPackage() != null) {
+                    packageLpa = company.getMinimumPackage().divide(BigDecimal.valueOf(100_000), 2, RoundingMode.HALF_UP);
+                }
+
+                if (packageLpa.compareTo(highestPackageLpa) > 0) {
+                    highestPackageLpa = packageLpa;
+                }
+
+                companyOffers.add(PlacedCompanyOfferResponse.builder()
+                        .companyId(company != null ? company.getId() : null)
+                        .companyName(company != null ? company.getCompanyName() : "Company")
+                        .roleOffered(company != null ? company.getRoleOffered() : null)
+                        .packageOfferedLpa(packageLpa)
+                        .selectionDate(app.getApplicationDate())
+                        .build());
+            }
+
+            List<Certificate> approvedCertificates = certificateRepository.findByStudentIdAndStatus(student.getId(), CertificateStatus.APPROVED);
+            List<PlacedStudentCertificateResponse> certificateResponses = approvedCertificates.stream()
+                    .map(cert -> PlacedStudentCertificateResponse.builder()
+                            .id(cert.getId())
+                            .certificateName(cert.getCertificateName())
+                            .certificateType(cert.getCertificateType())
+                            .provider(cert.getProvider())
+                            .issueDate(cert.getIssueDate())
+                            .skillsLearned(cert.getSkillsLearned() != null ?
+                                    cert.getSkillsLearned().stream().map(Skill::getName).collect(Collectors.toSet()) : Collections.emptySet())
+                            .build())
+                    .collect(Collectors.toList());
+
+            Set<String> skillNames = student.getSkills() != null ?
+                    student.getSkills().stream().map(Skill::getName).collect(Collectors.toSet()) : Collections.emptySet();
+
+            showcaseList.add(PlacedStudentShowcaseResponse.builder()
+                    .studentId(student.getId())
+                    .studentName(student.getUser() != null ? student.getUser().getFullName() : "Placed Student")
+                    .rollNumber(student.getRollNumber())
+                    .branchName(student.getBranch() != null ? student.getBranch().getName() : null)
+                    .academicYear(student.getYear())
+                    .placementYear(studentPlacementYear)
+                    .highestPackageLpa(highestPackageLpa)
+                    .totalOffersCount(companyOffers.size())
+                    .placedCompanies(companyOffers)
+                    .certifications(certificateResponses)
+                    .skills(skillNames)
+                    .linkedinLink(student.getLinkedinLink())
+                    .githubLink(student.getGithubLink())
+                    .build());
+        }
+
+        showcaseList.sort(Comparator.comparing(PlacedStudentShowcaseResponse::getHighestPackageLpa, Comparator.nullsLast(Comparator.reverseOrder())));
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), showcaseList.size());
+        List<PlacedStudentShowcaseResponse> pageContent = (start <= showcaseList.size()) ? showcaseList.subList(start, end) : Collections.emptyList();
+
+        return new PageImpl<>(pageContent, pageable, showcaseList.size());
+    }
+
+    /**
+     * Returns distinct available placement years for frontend tab filtering.
+     *
+     * @return List of available placement years sorted descending
+     */
+    @Transactional(readOnly = true)
+    public List<Integer> getAvailablePlacementYears() {
+        Set<Integer> years = placementApplicationRepository.findAll()
+                .stream()
+                .filter(app -> app.getStatus() == ApplicationStatus.SELECTED && app.getApplicationDate() != null)
+                .map(app -> app.getApplicationDate().getYear())
+                .collect(Collectors.toSet());
+
+        if (years.isEmpty()) {
+            years.add(LocalDate.now().getYear());
+        }
+
+        List<Integer> yearList = new ArrayList<>(years);
+        yearList.sort(Comparator.reverseOrder());
+        return yearList;
     }
 }

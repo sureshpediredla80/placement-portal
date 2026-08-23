@@ -46,4 +46,5 @@ export const ROUTES = {
   STUDENT_NOTIFICATIONS: "/student/notifications",
   STUDENT_TOPICS: "/student/topics",
  STUDENT_RESUME:"/student/resume",
+  STUDENT_PLACED_PROFILE: "/student/placed-profile/:studentId",
 };

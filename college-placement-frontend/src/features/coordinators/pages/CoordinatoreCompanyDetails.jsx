@@ -139,10 +139,14 @@ const CoordinatorCompanyDetailsPage = () => {
     }
 
     // Formatting helpers
-    const formatLpa = (val) => val ? `${(val / 100000).toFixed(1)} LPA` : "N/A";
-    const packageRange = company.maximumPackage && company.maximumPackage !== company.minimumPackage
-        ? `${formatLpa(company.minimumPackage)} - ${formatLpa(company.maximumPackage)}`
-        : formatLpa(company.minimumPackage);
+    // Formatting helpers
+    const packageRange =
+        company.maximumPackage != null &&
+        company.maximumPackage !== company.minimumPackage
+            ? `${company.minimumPackage} LPA - ${company.maximumPackage} LPA`
+            : company.minimumPackage != null
+                ? `${company.minimumPackage} LPA`
+                : "N/A";
 
     const formatDate = (dateString) => dateString
         ? new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
@@ -282,7 +286,7 @@ const CoordinatorCompanyDetailsPage = () => {
                                     <DetailItem icon={<MdSchool />} label="Max CGPA" value={company.maximumCgpa} />
                                     <DetailItem icon={<MdSchool />} label="SSC Minimum %" value={company.minimumSscPercentage} />
                                     <DetailItem icon={<MdSchool />} label="Inter Minimum %" value={company.minimumInterPercentage} />
-                                    <DetailItem icon={<MdSchool />} label="Diploma Min CGPA" value={company.minimumDiplomaCgpa} />
+                                    <DetailItem icon={<MdSchool />} label="Diploma Minimum %" value={company.minimumDiplomaPercentage} />
                                     <DetailItem icon={<MdSchool />} label="Max EAMCET Rank" value={company.maximumEmcetRank} />
                                     <DetailItem icon={<MdSchool />} label="Max ECET Rank" value={company.maximumEcetRank} />
                                 </Box>
@@ -298,7 +302,15 @@ const CoordinatorCompanyDetailsPage = () => {
                                     <BooleanItem label="First Attempt Required" value={company.firstAttemptRequired} />
                                     <DetailItem icon={<MdSchool />} label="Gender Eligibility" value={company.genderEligibility} />
                                     <BooleanItem label="Placed Students Allowed" value={company.allowAlreadyPlacedStudents} />
-                                    <DetailItem icon={<MdPayments />} label="Max Prev. Package" value={formatLpa(company.maximumPreviousPackage)} />
+                                    <DetailItem
+                                        icon={<MdPayments />}
+                                        label="Max Prev. Package"
+                                        value={
+                                            company.maximumPreviousPackage != null
+                                                ? `${company.maximumPreviousPackage} LPA`
+                                                : null
+                                        }
+                                    />
                                 </Box>
                             </Box>
                         </CardContent>

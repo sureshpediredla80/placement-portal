@@ -6,6 +6,7 @@ import com.college.placement.exception.BadRequestException;
 import com.college.placement.service.ApplicationService;
 import com.college.placement.dto.request.ApplicationRequest;
 import com.college.placement.dto.response.ApplicationResponse;
+import com.college.placement.dto.response.PlacedStudentShowcaseResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,6 +103,44 @@ public class PlacementApplicationController {
         
         validatePageable(pageable);
         Page<ApplicationResponse> response = applicationService.getMyApplications(status, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves a paginated showcase of all placed / selected students for campus motivation and career guidance.
+     * Accessible by ALL authenticated users (STUDENT, COORDINATOR, ADMIN). Supports optional placement year filtering.
+     *
+     * @param year optional placement year filter
+     * @param pageable pagination details
+     * @return ResponseEntity containing Page of PlacedStudentShowcaseResponse DTOs
+     */
+    @GetMapping("/placed-students")
+    @PreAuthorize("hasAnyRole('STUDENT', 'COORDINATOR', 'ADMIN')")
+    @Operation(summary = "Get placed students showcase for campus motivation and guidance")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<Page<PlacedStudentShowcaseResponse>> getPlacedStudentsShowcase(
+            @RequestParam(name = "year", required = false) Integer year,
+            @ParameterObject @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        log.info("REST request to fetch placed students showcase for campus motivation with year: {}", year);
+
+        validatePageable(pageable);
+        Page<PlacedStudentShowcaseResponse> response = applicationService.getPlacedStudentsShowcase(year, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves all available placement years for frontend tab/filter selection.
+     * Accessible by ALL authenticated users (STUDENT, COORDINATOR, ADMIN).
+     *
+     * @return ResponseEntity containing List of available placement years
+     */
+    @GetMapping("/placed-students/years")
+    @PreAuthorize("hasAnyRole('STUDENT', 'COORDINATOR', 'ADMIN')")
+    @Operation(summary = "Get available placement years for showcase filter")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<List<Integer>> getAvailablePlacementYears() {
+        log.info("REST request to fetch available placement years for showcase filtering");
+        List<Integer> response = applicationService.getAvailablePlacementYears();
         return ResponseEntity.ok(response);
     }
 

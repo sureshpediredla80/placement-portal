@@ -22,9 +22,9 @@ public class StudentProfileAdminUpdateRequest {
     @Max(value = 100, message = "Intermediate percentage cannot exceed 100")
     private Double intermediatePercentage;
 
-    @PositiveOrZero(message = "Diploma CGPA cannot be negative")
-    @Max(value = 10, message = "Diploma CGPA cannot exceed 10")
-    private Double diplomaCgpa;
+    @PositiveOrZero(message = "Diploma percentage cannot be negative")
+    @Max(value = 100, message = "Diploma percentage cannot exceed 100")
+    private Double diplomaPercentage;
 
     @PositiveOrZero(message = "B.Tech CGPA cannot be negative")
     @Max(value = 10, message = "B.Tech CGPA cannot exceed 10")

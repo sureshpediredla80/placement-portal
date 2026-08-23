@@ -21,6 +21,7 @@ const ResetPasswordPage = lazy(() => import("../features/auth/pages/ResetPasswor
 const AdminDashboard = lazy(() => import("../features/dashboard/pages/AdminDashboard"));
 const CoordinatorDashboard = lazy(() => import("../features/dashboard/pages/CoordinatorDashboard"));
 const StudentDashboard = lazy(() => import("../features/dashboard/pages/StudentDashboard"));
+const PlacedStudentProfilePage = lazy(() => import("../features/dashboard/pages/PlacedStudentProfilePage"));
 const StudentProfilePage = lazy(() => import("../features/students/pages/StudentProfilePage"));
 const StudentCompaniesPage = lazy(() => import("../features/companies/pages/StudentCompaniesPage"));
 const StudentCompanyDetailsPage = lazy(() => import("../features/companies/pages/StudentCompanyDetailsPage"));
@@ -147,6 +148,7 @@ const AppRoutes = () => (
           <Route path={ROUTES.STUDENT_COMPANY_DETAILS} element={<StudentCompanyDetailsPage />}/>
           <Route path={ROUTES.STUDENT_TOPICS} element={<StudentTopicsPage />} />
           <Route path={ROUTES.STUDENT_RESUME} element={<ResumeBuilderPage/>} />
+          <Route path={ROUTES.STUDENT_PLACED_PROFILE} element={<PlacedStudentProfilePage />} />
           <Route
               path={ROUTES.STUDENT_NOTIFICATIONS}
               element={<NotificationPage />}

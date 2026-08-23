@@ -69,12 +69,11 @@ public class StudentProfile {
     @Column(name = "intermediate_percentage")
     private Double intermediatePercentage;
 
-    @Column(name = "diploma_cgpa")
-    private Double diplomaCgpa;
+    @Column(name = "diploma_percentage")
+    private Double diplomaPercentage;
 
     @Column(nullable = false)
     private Double cgpa;
-
     @Builder.Default
     @Column(nullable = false)
     private Integer backlogs = 0;

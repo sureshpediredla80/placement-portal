@@ -27,35 +27,45 @@ import {
     updateStudent,
 } from "../api/coordinatorApi";
 
+const transformNumber = (value, originalValue) =>
+    originalValue === "" || originalValue === null || originalValue === undefined
+        ? null
+        : (isNaN(value) ? null : Number(value));
+
 const schema = yup.object({
 
     sscPercentage: yup
         .number()
-        .min(0)
-        .max(100)
+        .typeError("SSC Percentage must be a valid number")
+        .min(0, "SSC Percentage must be at least 0")
+        .max(100, "SSC Percentage cannot exceed 100")
         .required("SSC Percentage is required"),
 
     intermediatePercentage: yup
         .number()
-        .min(0)
-        .max(100)
-        .required("Intermediate Percentage is required"),
+        .nullable()
+        .transform(transformNumber)
+        .min(0, "Intermediate Percentage must be at least 0")
+        .max(100, "Intermediate Percentage cannot exceed 100"),
 
-    diplomaCgpa: yup
+    diplomaPercentage: yup
         .number()
-        .min(0)
-        .max(10)
-        .required("Diploma CGPA is required"),
+        .nullable()
+        .transform(transformNumber)
+        .min(0, "Diploma Percentage must be at least 0")
+        .max(100, "Diploma Percentage cannot exceed 100"),
 
     cgpa: yup
         .number()
-        .min(0)
-        .max(10)
+        .typeError("CGPA must be a valid number")
+        .min(0, "CGPA must be at least 0")
+        .max(10, "CGPA cannot exceed 10")
         .required("CGPA is required"),
 
     backlogs: yup
         .number()
-        .min(0)
+        .typeError("Backlogs must be a valid number")
+        .min(0, "Backlogs cannot be negative")
         .required("Backlogs are required"),
 
     admissionType: yup
@@ -68,7 +78,8 @@ const schema = yup.object({
 
     entranceRank: yup
         .number()
-        .min(0)
+        .typeError("Entrance Rank must be a valid number")
+        .min(0, "Entrance Rank cannot be negative")
         .required("Entrance Rank is required"),
 
     placementStatus: yup
@@ -79,7 +90,17 @@ const schema = yup.object({
         .boolean()
         .required()
 
-});
+}).test(
+    "inter-or-diploma",
+    "Either Intermediate Percentage or Diploma Percentage is required",
+    function (values) {
+        const inter = values?.intermediatePercentage;
+        const diploma = values?.diplomaPercentage;
+        const hasInter = inter !== null && inter !== undefined && inter !== "" && !isNaN(inter);
+        const hasDiploma = diploma !== null && diploma !== undefined && diploma !== "" && !isNaN(diploma);
+        return hasInter || hasDiploma;
+    }
+);
 
 const admissionOptions = [
     "CQ",
@@ -230,9 +251,9 @@ const UpdateStudentDialog = ({
 
             sscPercentage: 0,
 
-            intermediatePercentage: 0,
+            intermediatePercentage: null,
 
-            diplomaCgpa: 0,
+            diplomaPercentage: null,
 
             cgpa: 0,
 
@@ -260,9 +281,9 @@ const UpdateStudentDialog = ({
 
                 sscPercentage: student.sscPercentage,
 
-                intermediatePercentage: student.intermediatePercentage,
+                intermediatePercentage: student.intermediatePercentage ?? null,
 
-                diplomaCgpa: student.diplomaCgpa,
+                diplomaPercentage: student.diplomaPercentage ?? null,
 
                 cgpa: student.cgpa,
 
@@ -391,8 +412,8 @@ const UpdateStudentDialog = ({
                         >
                             <AppFormField
                                 control={control}
-                                name="diplomaCgpa"
-                                label="Diploma CGPA"
+                                name="diplomaPercentage"
+                                label="Diploma Percentage (%)"
                                 type="number"
                             />
                         </Grid>
