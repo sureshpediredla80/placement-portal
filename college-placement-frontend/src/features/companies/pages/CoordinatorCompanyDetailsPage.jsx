@@ -21,17 +21,17 @@ import {
 } from "@mui/material";
 
 // Using react-icons to completely avoid @mui/icons-material Vite build errors
-import { 
-    MdBusiness, 
-    MdOutlineWork, 
-    MdPayments, 
-    MdEventAvailable, 
-    MdSchool, 
-    MdRule, 
-    MdOutlineDescription, 
-    MdCheckCircle, 
-    MdCancel, 
-    MdLibraryBooks, 
+import {
+    MdBusiness,
+    MdOutlineWork,
+    MdPayments,
+    MdEventAvailable,
+    MdSchool,
+    MdRule,
+    MdOutlineDescription,
+    MdCheckCircle,
+    MdCancel,
+    MdLibraryBooks,
     MdLink,
     MdFileUpload,
     MdEdit,
@@ -70,7 +70,7 @@ const BooleanItem = ({ label, value }) => {
                 {value ? <MdCheckCircle /> : <MdCancel />}
             </Box>
             <Box>
-                 <Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+                <Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
                     {label}
                 </Typography>
                 <Typography variant="body1" fontWeight={500} color={value ? 'success.dark' : 'error.dark'}>
@@ -88,13 +88,13 @@ const CoordinatorCompanyDetailsPage = () => {
 
     const [company, setCompany] = useState(null);
     const [loading, setLoading] = useState(true);
-    
+
     // Dialog States
     const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [openResultDialog, setOpenResultDialog] = useState(false);
     const [openUploadDialog, setOpenUploadDialog] = useState(false);
-    
+
     // Upload States
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -132,7 +132,7 @@ const CoordinatorCompanyDetailsPage = () => {
 
     if (!company) {
         return (
-             <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
                 <Typography variant="h5" color="text.secondary">Company not found.</Typography>
             </Box>
         );
@@ -140,12 +140,12 @@ const CoordinatorCompanyDetailsPage = () => {
 
     // Formatting helpers
     const formatLpa = (val) => val ? `${(val / 100000).toFixed(1)} LPA` : "N/A";
-    const packageRange = company.maximumPackage && company.maximumPackage !== company.minimumPackage 
+    const packageRange = company.maximumPackage && company.maximumPackage !== company.minimumPackage
         ? `${formatLpa(company.minimumPackage)} - ${formatLpa(company.maximumPackage)}`
         : formatLpa(company.minimumPackage);
-        
-    const formatDate = (dateString) => dateString 
-        ? new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) 
+
+    const formatDate = (dateString) => dateString
+        ? new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
         : "N/A";
 
     const handleDeleteCompany = async () => {
@@ -184,7 +184,7 @@ const CoordinatorCompanyDetailsPage = () => {
             setOpenResultDialog(true);
             setSnackbar({ open: true, message: "Results uploaded successfully.", severity: "success" });
             setSelectedFile(null);
-            
+
             // Reset the file input
             if(fileInputRef.current) fileInputRef.current.value = "";
         } catch (error) {
@@ -222,7 +222,7 @@ const CoordinatorCompanyDetailsPage = () => {
                             {company.companyName}
                         </Typography>
                     </Box>
-                    
+
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
                         <Chip
                             icon={<Box sx={{ display: 'flex', pl: 1 }}><MdOutlineWork size={20} /></Box>}
@@ -263,20 +263,20 @@ const CoordinatorCompanyDetailsPage = () => {
                     {/* Eligibility & Requirements */}
                     <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', mb: 4, border: '1px solid', borderColor: 'divider' }}>
                         <CardContent sx={{ p: 4 }}>
-                             <Box display="flex" alignItems="center" gap={1.5} mb={3}>
+                            <Box display="flex" alignItems="center" gap={1.5} mb={3}>
                                 <Box sx={{ display: 'flex', color: 'primary.main', fontSize: 28 }}><MdRule /></Box>
                                 <Typography variant="h5" fontWeight={700}>
                                     Eligibility Criteria
                                 </Typography>
                             </Box>
                             <Divider sx={{ mb: 4 }} />
-                            
+
                             <Box>
                                 {/* Academic Criteria Section */}
                                 <Typography variant="subtitle1" fontWeight={700} color="primary.main" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
                                     Academic Requirements
                                 </Typography>
-                                
+
                                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }, gap: 3, mt: 2, mb: 4 }}>
                                     <DetailItem icon={<MdSchool />} label="Min CGPA" value={company.minimumCgpa} />
                                     <DetailItem icon={<MdSchool />} label="Max CGPA" value={company.maximumCgpa} />
@@ -308,10 +308,10 @@ const CoordinatorCompanyDetailsPage = () => {
                 {/* Right Column - Side Panels & Actions */}
                 <Box>
                     {/* Coordinator Actions Panel */}
-                    <Card sx={{ 
-                        borderRadius: 4, 
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.06)', 
-                        mb: 4, 
+                    <Card sx={{
+                        borderRadius: 4,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                        mb: 4,
                         background: theme.palette.mode === 'dark' ? alpha(theme.palette.secondary.main, 0.1) : alpha(theme.palette.secondary.main, 0.04),
                         border: `1px solid ${theme.palette.secondary.main}`
                     }}>
@@ -320,7 +320,7 @@ const CoordinatorCompanyDetailsPage = () => {
                                 <Box sx={{ display: 'flex', fontSize: 24 }}><MdAdminPanelSettings /></Box> Coordinator Actions
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
-                            
+
                             <Stack spacing={2}>
                                 <Button
                                     variant="contained"
@@ -332,7 +332,7 @@ const CoordinatorCompanyDetailsPage = () => {
                                 >
                                     View Applications
                                 </Button>
-                                
+
                                 <Button
                                     variant="contained"
                                     color="success"
@@ -343,9 +343,9 @@ const CoordinatorCompanyDetailsPage = () => {
                                 >
                                     {selectedFile ? selectedFile.name : "Upload Excel Results"}
                                 </Button>
-                                
+
                                 <Divider sx={{ my: 1 }} />
-                                
+
                                 <Stack direction="row" spacing={2}>
                                     <Button
                                         variant="outlined"
@@ -373,11 +373,11 @@ const CoordinatorCompanyDetailsPage = () => {
                     </Card>
 
                     {/* Important Dates */}
-                    <Card sx={{ 
-                        borderRadius: 4, 
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.04)', 
-                        mb: 4, 
-                        border: '1px solid', 
+                    <Card sx={{
+                        borderRadius: 4,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                        mb: 4,
+                        border: '1px solid',
                         borderColor: 'divider'
                     }}>
                         <CardContent sx={{ p: 3 }}>
@@ -385,7 +385,7 @@ const CoordinatorCompanyDetailsPage = () => {
                                 <Box sx={{ display: 'flex', color: 'primary.main', fontSize: 24 }}><MdEventAvailable /></Box> Key Dates
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
-                            
+
                             <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" display="block" mb={0.5}>
                                     Apply Deadline
@@ -394,7 +394,7 @@ const CoordinatorCompanyDetailsPage = () => {
                                     {formatDate(company.applyDeadline)}
                                 </Typography>
                             </Box>
-                            
+
                             <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" display="block" mb={0.5}>
                                     Drive Date
@@ -446,7 +446,7 @@ const CoordinatorCompanyDetailsPage = () => {
                     {/* Resources */}
                     <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid', borderColor: 'divider' }}>
                         <CardContent sx={{ p: 3 }}>
-                             <Typography variant="h6" fontWeight={800} gutterBottom display="flex" alignItems="center" gap={1.5}>
+                            <Typography variant="h6" fontWeight={800} gutterBottom display="flex" alignItems="center" gap={1.5}>
                                 <Box sx={{ display: 'flex', color: 'primary.main', fontSize: 24 }}><MdLibraryBooks /></Box> Resources
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
@@ -461,9 +461,9 @@ const CoordinatorCompanyDetailsPage = () => {
                                             target="_blank"
                                             rel="noreferrer"
                                             startIcon={<MdLink size={20} />}
-                                            sx={{ 
-                                                justifyContent: 'flex-start', 
-                                                textTransform: 'none', 
+                                            sx={{
+                                                justifyContent: 'flex-start',
+                                                textTransform: 'none',
                                                 borderRadius: 2,
                                                 py: 1.5,
                                                 fontWeight: 600
@@ -507,7 +507,7 @@ const CoordinatorCompanyDetailsPage = () => {
                 company={company}
                 mode="update"
             />
-            
+
             <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
                 <DialogTitle sx={{ fontWeight: 700 }}>Delete Company</DialogTitle>
                 <DialogContent>
@@ -547,7 +547,7 @@ const CoordinatorCompanyDetailsPage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+
             <Dialog open={openResultDialog} onClose={() => setOpenResultDialog(false)} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 700 }}>Bulk Upload Result</DialogTitle>
                 <Divider />

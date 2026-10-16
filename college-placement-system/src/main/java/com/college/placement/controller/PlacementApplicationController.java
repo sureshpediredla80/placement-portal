@@ -59,9 +59,9 @@ public class PlacementApplicationController {
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<ApplicationResponse> applyToCompany(
             @Valid @RequestBody ApplicationRequest request) {
-        log.info("REST request to submit placement application for company ID: {}", 
+        log.info("REST request to submit placement application for company ID: {}",
                 request != null ? request.getCompanyId() : null);
-        
+
         ApplicationResponse response = applicationService.applyToCompany(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -80,7 +80,7 @@ public class PlacementApplicationController {
     public ResponseEntity<ApplicationResponse> getApplicationById(
             @PathVariable("applicationId") Long applicationId) {
         log.info("REST request to retrieve application details for ID: {}", applicationId);
-        
+
         ApplicationResponse response = applicationService.getApplicationById(applicationId);
         return ResponseEntity.ok(response);
     }
@@ -100,7 +100,7 @@ public class PlacementApplicationController {
     public ResponseEntity<Page<ApplicationResponse>> getMyApplications(
             @RequestParam(name = "status", required = false) ApplicationStatus status,  @ParameterObject @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)    Pageable pageable) {
         log.info("REST request to fetch my applications with status filter: {}", status);
-        
+
         validatePageable(pageable);
         Page<ApplicationResponse> response = applicationService.getMyApplications(status, pageable);
         return ResponseEntity.ok(response);
@@ -162,7 +162,7 @@ public class PlacementApplicationController {
             @RequestParam(name = "status", required = false) ApplicationStatus status,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)    Pageable pageable) {
         log.info("REST request to fetch applications for company ID: {} with status filter: {}", companyId, status);
-        
+
         validatePageable(pageable);
         Page<ApplicationResponse> response = applicationService.getApplicationsByCompany(companyId, status, pageable);
         return ResponseEntity.ok(response);
@@ -186,7 +186,7 @@ public class PlacementApplicationController {
             @RequestParam(name = "status", required = false) ApplicationStatus status,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)    Pageable pageable) {
         log.info("REST request to fetch applications for student ID: {} with status filter: {}", studentId, status);
-        
+
         validatePageable(pageable);
         Page<ApplicationResponse> response = applicationService.getApplicationsByStudent(studentId, status, pageable);
         return ResponseEntity.ok(response);
@@ -209,7 +209,7 @@ public class PlacementApplicationController {
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)       Pageable pageable)
     {
         log.info("REST request to fetch all applications with status filter: {}", status);
-        
+
         validatePageable(pageable);
         Page<ApplicationResponse> response = applicationService.getAllApplications(status, pageable);
         return ResponseEntity.ok(response);
@@ -263,7 +263,7 @@ public class PlacementApplicationController {
     public ResponseEntity<ApplicationResponse> selectApplication(
             @PathVariable("applicationId") Long applicationId) {
         log.info("REST request to select application ID: {}", applicationId);
-        
+
         ApplicationResponse response = applicationService.selectApplication(applicationId);
         return ResponseEntity.ok(response);
     }

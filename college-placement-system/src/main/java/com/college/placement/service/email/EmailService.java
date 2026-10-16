@@ -1,4 +1,3 @@
-
 package com.college.placement.service.email;
 
 public interface EmailService {
@@ -22,4 +21,3 @@ public interface EmailService {
             String roleOffered
     );
 }
-

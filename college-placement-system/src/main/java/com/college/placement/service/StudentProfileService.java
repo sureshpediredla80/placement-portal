@@ -625,7 +625,7 @@ public class StudentProfileService {
                 .sscPercentage(profile.getSscPercentage())
                 .intermediatePercentage(profile.getIntermediatePercentage())
                 .diplomaPercentage(profile.getDiplomaPercentage())
-                 // NEW
+                // NEW
                 .cgpa(profile.getCgpa())
                 .backlogs(profile.getBacklogs())
 

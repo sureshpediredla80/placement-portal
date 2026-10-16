@@ -250,7 +250,7 @@ const StudentCompanyDetailsPage = () => {
                                     <DetailItem icon={<MdSchool />} label="Max CGPA" value={company.maximumCgpa} />
                                     <DetailItem icon={<MdSchool />} label="SSC Minimum %" value={company.minimumSscPercentage} />
                                     <DetailItem icon={<MdSchool />} label="Inter Minimum %" value={company.minimumInterPercentage} />
-                                    <DetailItem icon={<MdSchool />} label="Diploma Minimum %" value={company.minimumDiplomaPercentage} />
+                                    <DetailItem icon={<MdSchool />} label="Diploma Min CGPA" value={company.minimumDiplomaCgpa} />
                                     <DetailItem icon={<MdSchool />} label="Max EAMCET Rank" value={company.maximumEmcetRank} />
                                     <DetailItem icon={<MdSchool />} label="Max ECET Rank" value={company.maximumEcetRank} />
                                 </Box>

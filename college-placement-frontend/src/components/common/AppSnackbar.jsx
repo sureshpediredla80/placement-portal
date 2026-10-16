@@ -1,7 +1,4 @@
-import {
-    Snackbar,
-    Alert,
-} from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 
 const AppSnackbar = ({
                          open,
@@ -12,7 +9,7 @@ const AppSnackbar = ({
     return (
         <Snackbar
             open={open}
-            autoHideDuration={3000}
+            autoHideDuration={4000}
             onClose={onClose}
             anchorOrigin={{
                 vertical: "top",
@@ -20,9 +17,9 @@ const AppSnackbar = ({
             }}
         >
             <Alert
+                onClose={onClose}
                 severity={severity}
                 variant="filled"
-                onClose={onClose}
                 sx={{ width: "100%" }}
             >
                 {message}

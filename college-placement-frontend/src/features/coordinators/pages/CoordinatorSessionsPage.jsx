@@ -3,75 +3,85 @@ import {
     Typography,
     Button,
     TextField,
-} from "@mui/material";
-import {
+    ToggleButton,
+    ToggleButtonGroup,
+    Grid,
+    CircularProgress,
+    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
 } from "@mui/material";
+
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+
+import { useState, useEffect } from "react";
+
 import AppSnackbar from "../../../components/common/AppSnackbar";
-import { useState ,useEffect} from "react";
 
 import CreateSessionDialog from "../components/CreateSessionDialog";
+
+import SessionCard from "../components/SessionCard";
+
+import SessionDetailsDialog from "../components/SessionDetailsDialog";
+
 import {
-    getSessionById,
     getSessions,
-    deleteSession, getUpcomingSessions,   getSessionsByDateRange,
+    getUpcomingSessions,
+    getSessionsByDateRange,
+    getSessionById,
+    deleteSession,
 } from "../api/coordinatorApi";
 
-import SessionCard
-    from "../components/SessionCard";
-import SessionDetailsDialog
-    from "../components/SessionDetailsDialog";
 const CoordinatorSessionsPage = () => {
-    const [filter, setFilter] =
-        useState("ALL");
-    const [
-        openCreateDialog,
-        setOpenCreateDialog,
-    ] = useState(false);
+
+    // ---------------- Pagination ----------------
+
+    const [page, setPage] = useState(0);
+
+    const [size] = useState(9);
+
+    const [totalPages, setTotalPages] = useState(0);
+
+    // ---------------- Filter ----------------
+
+    const [filter, setFilter] = useState("ALL");
+
+    // ---------------- Dialogs ----------------
+
+    const [openCreateDialog, setOpenCreateDialog] = useState(false);
+
+    const [detailsOpen, setDetailsOpen] = useState(false);
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    // ---------------- Sessions ----------------
+
+    const [sessions, setSessions] = useState([]);
+
+    const [selectedSession, setSelectedSession] = useState(null);
+
+    const [selectedSessionId, setSelectedSessionId] = useState(null);
+
+    // ---------------- Loading ----------------
+
+    const [loading, setLoading] = useState(false);
+
+    // ---------------- Date Range ----------------
+
+    const [startDate, setStartDate] = useState("");
+
+    const [endDate, setEndDate] = useState("");
+
+    // ---------------- Snackbar ----------------
+
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: "",
         severity: "success",
     });
-    const [
-        sessions,
-        setSessions,
-    ] = useState([]);
-
-    const [
-        loading,
-        setLoading,
-    ] = useState(false);
-    const [
-        selectedSession,
-        setSelectedSession,
-    ] = useState(null);
-
-    const [
-        detailsOpen,
-        setDetailsOpen,
-    ] = useState(false);
-    const [
-        deleteDialogOpen,
-        setDeleteDialogOpen,
-    ] = useState(false);
-
-    const [
-        selectedSessionId,
-        setSelectedSessionId,
-    ] = useState(null);
-    const [startDate, setStartDate] =
-        useState("");
-
-    const [endDate, setEndDate] =
-        useState("");
 
     const handleCloseSnackbar = () => {
         setSnackbar((prev) => ({
@@ -79,325 +89,397 @@ const CoordinatorSessionsPage = () => {
             open: false,
         }));
     };
-    const loadSessions =
-        async () => {
+    // ===========================
+    // Load Sessions
+    // ===========================
 
-            try {
+    const loadSessions = async () => {
 
-                setLoading(true);
+        try {
 
-                let data;
+            setLoading(true);
 
-                if (filter === "ALL") {
+            let data;
 
-                    data =
-                        await getSessions();
+            if (filter === "ALL") {
 
-                } else if (
-                    filter === "UPCOMING"
-                ) {
+                data = await getSessions(page, size);
 
-                    data =
-                        await getUpcomingSessions();
+            } else if (filter === "UPCOMING") {
 
-                }
+                data = await getUpcomingSessions(page, size);
 
-                setSessions(data.content);
-
-            } catch (error) {
-
-                console.error(error);
-
-            } finally {
-
-                setLoading(false);
-
-            }
-        };
-    const handleDateRangeSearch =
-        async () => {
-            console.log(startDate);
-            console.log(endDate);
-
-            if (
-                !startDate ||
-                !endDate
-            ) {
-
-                setSnackbar({
-                    open: true,
-                    message:
-                        "Please select start and end dates",
-                    severity: "warning",
-                });
+            } else {
 
                 return;
+
             }
 
-            try {
+            setSessions(data.content || []);
 
-                setLoading(true);
+            setTotalPages(data.totalPages || 0);
 
+        } catch (error) {
 
+            console.error(error);
 
-                const data =
-                    await getSessionsByDateRange(
-                        startDate,
-                        endDate
-                    );
+            setSnackbar({
+                open: true,
+                message: "Failed to load sessions",
+                severity: "error",
+            });
 
-                setSessions(
-                    data.content
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+    // ===========================
+    // Date Range Search
+    // ===========================
+
+    const handleDateRangeSearch = async () => {
+
+        if (!startDate || !endDate) {
+
+            setSnackbar({
+                open: true,
+                message: "Please select start and end dates",
+                severity: "warning",
+            });
+
+            return;
+
+        }
+
+        try {
+
+            setLoading(true);
+
+            setPage(0);
+
+            const data =
+                await getSessionsByDateRange(
+                    startDate,
+                    endDate,
+                    page,
+                    size
                 );
 
-            } catch (error) {
+            setSessions(data.content || []);
 
-                console.error(error);
+            setTotalPages(data.totalPages || 0);
 
-                setSnackbar({
-                    open: true,
-                    message:
-                        "Failed to fetch sessions",
-                    severity: "error",
-                });
+        } catch (error) {
 
-            } finally {
+            console.error(error);
 
-                setLoading(false);
+            setSnackbar({
+                open: true,
+                message: "Failed to fetch sessions",
+                severity: "error",
+            });
 
-            }
-        };
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+    // ===========================
+    // View Details
+    // ===========================
+
+    const handleViewDetails = async (sessionId) => {
+
+        try {
+
+            const data = await getSessionById(sessionId);
+
+            setSelectedSession(data);
+
+            setDetailsOpen(true);
+
+        } catch (error) {
+
+            console.error(error);
+
+            setSnackbar({
+                open: true,
+                message: "Failed to load session details",
+                severity: "error",
+            });
+
+        }
+
+    };
+
+    // ===========================
+    // Delete Dialog
+    // ===========================
+
+    const handleDeleteClick = (sessionId) => {
+
+        setSelectedSessionId(sessionId);
+
+        setDeleteDialogOpen(true);
+
+    };
+
+    // ===========================
+    // Delete Session
+    // ===========================
+
+    const handleDeleteSession = async () => {
+
+        try {
+
+            await deleteSession(selectedSessionId);
+
+            setSnackbar({
+                open: true,
+                message: "Session deleted successfully",
+                severity: "success",
+            });
+
+            loadSessions();
+
+        } catch (error) {
+
+            console.error(error);
+
+            setSnackbar({
+                open: true,
+                message: "Failed to delete session",
+                severity: "error",
+            });
+
+        } finally {
+
+            setDeleteDialogOpen(false);
+
+            setSelectedSessionId(null);
+
+        }
+
+    };
+
+    // ===========================
+    // useEffect
+    // ===========================
+
     useEffect(() => {
 
-        loadSessions();
+        if (
+            filter === "ALL" ||
+            filter === "UPCOMING"
+        ) {
+
+            loadSessions();
+
+        }
+
+    }, [filter, page]);
+
+    useEffect(() => {
+
+        setPage(0);
+
+        if (filter !== "DATE_RANGE") {
+
+            setStartDate("");
+
+            setEndDate("");
+
+        }
 
     }, [filter]);
-    const handleViewDetails =
-        async (sessionId) => {
-
-            try {
-
-                const data =
-                    await getSessionById(
-                        sessionId
-                    );
-
-                setSelectedSession(
-                    data
-                );
-
-                setDetailsOpen(
-                    true
-                );
-
-            } catch (error) {
-
-                console.error(error);
-
-                setSnackbar({
-                    open: true,
-                    message:
-                        "Failed to load session details",
-                    severity: "error",
-                });
-
-            }
-        };
-    const handleDeleteClick =
-        (sessionId) => {
-
-            setSelectedSessionId(
-                sessionId
-            );
-
-            setDeleteDialogOpen(
-                true
-            );
-        };
-    const handleDeleteSession =
-        async () => {
-
-            try {
-
-                await deleteSession(
-                    selectedSessionId
-                );
-
-                setSnackbar({
-                    open: true,
-                    message:
-                        "Session deleted successfully",
-                    severity: "success",
-                });
-
-                loadSessions();
-
-            } catch (error) {
-
-                setSnackbar({
-                    open: true,
-                    message:
-                        "Failed to delete session",
-                    severity: "error",
-                });
-
-            } finally {
-
-                setDeleteDialogOpen(
-                    false
-                );
-
-                setSelectedSessionId(
-                    null
-                );
-            }
-        };
-
     return (
         <Box sx={{ width: "100%" }}>
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    alignItems: "center",
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    fontWeight={700}
-                >
-                    Sessions
-                </Typography>
 
-                <Button
-                    variant="contained"
-                    onClick={() =>
-                        setOpenCreateDialog(true)
-                    }
-                >
-                    Create Session
-                </Button>
-            </Box>
+            {/* Header */}
 
             <Box
                 sx={{
-                    mt: 2,
-                    mb: 3,
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 10,
+                    backgroundColor: "rgba(245,247,251,.9)",
+                    backdropFilter: "blur(12px)",
+                    borderBottom: "1px solid #e6eaf0",
+                    pb: 2,
+                    pt: 1,
                 }}
             >
 
-                <FormControl
-                    size="small"
-                    sx={{ minWidth: 220 }}
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 3,
+                    }}
                 >
-                    <InputLabel>
-                        Filter
-                    </InputLabel>
 
-                    <Select
-                        value={filter}
-                        label="Filter"
-                        onChange={(e) =>
-                            setFilter(
-                                e.target.value
-                            )
+                    <Typography
+                        variant="h4"
+                        fontWeight={700}
+                    >
+                        Sessions
+                    </Typography>
+
+                    <Button
+                        variant="contained"
+                        onClick={() =>
+                            setOpenCreateDialog(true)
                         }
                     >
-                        <MenuItem value="ALL">
-                            All Sessions
-                        </MenuItem>
+                        Create Session
+                    </Button>
 
-                        <MenuItem value="UPCOMING">
-                            Upcoming Sessions
-                        </MenuItem>
+                </Box>
 
-                        <MenuItem value="DATE_RANGE">
-                            Date Range
-                        </MenuItem>
+                <ToggleButtonGroup
+                    exclusive
+                    value={filter}
+                    onChange={(e, value) => {
+                        if (value !== null) {
+                            setFilter(value);
+                        }
+                    }}
+                    sx={{
+                        backgroundColor: "#F5F7FA",
+                        borderRadius: "14px",
+                        p: "4px",
 
-                    </Select>
+                        "& .MuiToggleButton-root": {
+                            border: "none",
+                            borderRadius: "10px",
+                            px: 3,
+                            py: 1,
+                            textTransform: "none",
+                            fontWeight: 600,
+                            color: "#555",
 
-                </FormControl>
-                {
-                    filter === "DATE_RANGE" && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                gap: 2,
-                                mt: 2,
-                                alignItems: "center",
-                                flexWrap: "wrap",
+                            "&:hover": {
+                                backgroundColor: "#EAF2FF",
+                            },
+                        },
+
+                        "& .Mui-selected": {
+                            backgroundColor:
+                                "#1976d2 !important",
+                            color:
+                                "#fff !important",
+                            boxShadow:
+                                "0 8px 20px rgba(25,118,210,.30)",
+                        },
+                    }}
+                >
+
+                    <ToggleButton value="ALL">
+                        All Sessions
+                    </ToggleButton>
+
+                    <ToggleButton value="UPCOMING">
+                        Upcoming
+                    </ToggleButton>
+
+                    <ToggleButton value="DATE_RANGE">
+                        Date Range
+                    </ToggleButton>
+
+                </ToggleButtonGroup>
+
+                {filter === "DATE_RANGE" && (
+
+                    <Box
+                        sx={{
+                            display: "flex",
+                            gap: 2,
+                            mt: 2,
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                        }}
+                    >
+
+                        <TextField
+                            label="Start Date"
+                            type="datetime-local"
+                            value={startDate}
+                            onChange={(e) =>
+                                setStartDate(e.target.value)
+                            }
+                            size="small"
+                            slotProps={{
+                                inputLabel: {
+                                    shrink: true,
+                                },
                             }}
+                        />
+
+                        <TextField
+                            label="End Date"
+                            type="datetime-local"
+                            value={endDate}
+                            onChange={(e) =>
+                                setEndDate(e.target.value)
+                            }
+                            size="small"
+                            slotProps={{
+                                inputLabel: {
+                                    shrink: true,
+                                },
+                            }}
+                        />
+
+                        <Button
+                            variant="contained"
+                            onClick={handleDateRangeSearch}
                         >
+                            Apply Filter
+                        </Button>
 
-                            <TextField
-                                label="Start Date"
-                                type="datetime-local"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                size="small"
-                                slotProps={{
-                                    inputLabel: {
-                                        shrink: true,
-                                    },
-                                }}
-                            />
+                    </Box>
 
-                            <TextField
-                                label="End Date"
-                                type="datetime-local"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                size="small"
-                                slotProps={{
-                                    inputLabel: {
-                                        shrink: true,
-                                    },
-                                }}
-                            />
-                            <Button
-                                variant="contained"
-                                onClick={
-
-                                    handleDateRangeSearch
-                                }
-                            >
-                                Apply Filter
-                            </Button>
-
-                        </Box>
-                    )
-                }
+                )}
 
             </Box>
+
             <CreateSessionDialog
-                open={
-                    openCreateDialog
-                }
+                open={openCreateDialog}
                 onClose={() =>
-                    setOpenCreateDialog(
-                        false
-                    )
+                    setOpenCreateDialog(false)
                 }
                 onSuccess={() => {
+
                     loadSessions();
+
                     setSnackbar({
                         open: true,
                         message:
                             "Session created successfully",
                         severity: "success",
                     });
+
                 }}
                 onError={() => {
+
                     setSnackbar({
                         open: true,
                         message:
                             "Failed to create session",
                         severity: "error",
                     });
+
                 }}
             />
+
             <AppSnackbar
                 open={snackbar.open}
                 message={snackbar.message}
@@ -405,50 +487,156 @@ const CoordinatorSessionsPage = () => {
                 onClose={handleCloseSnackbar}
             />
             {loading ? (
-                <Typography>
-                    Loading...
-                </Typography>
-            ) : (
                 <Box
-                    mt={4}
                     sx={{
-                        display: "grid",
-                        gridTemplateColumns:
-                            "repeat(auto-fill, minmax(250px, 1fr))",
-                        gap: 3,
+                        textAlign: "center",
+                        mt: 6,
                     }}
                 >
-                    {sessions.map((session) => (
-                        <SessionCard
-                            key={session.id}
-                            session={session}
-                            onViewDetails={() =>
-                                handleViewDetails(session.id)
-                            }
-                            onDelete={
-                                handleDeleteClick
-                            }
-                        />
-                    ))}
-                    <SessionDetailsDialog
-                        open={detailsOpen}
-                        onClose={() =>
-                            setDetailsOpen(false)
-                        }
-                        session={
-                            selectedSession
-                        }
-                    />
+                    <CircularProgress />
                 </Box>
+            ) : sessions.length > 0 ? (
+                <Box
+                    sx={{
+                        mt: 3,
+                        maxWidth: 1200,
+                        mx: "auto",
+
+                        animation: "fade .25s ease",
+
+                        "@keyframes fade": {
+                            from: {
+                                opacity: 0,
+                                transform: "translateY(12px)",
+                            },
+                            to: {
+                                opacity: 1,
+                                transform: "translateY(0)",
+                            },
+                        },
+                    }}
+                >
+                    <Grid
+                        container
+                        spacing={3}
+                    >
+                        {sessions.map((session) => (
+                            <Grid
+                                item
+                                xs={12}
+                                md={6}
+                                key={session.id}
+                            >
+                                <SessionCard
+                                    session={session}
+                                    onViewDetails={() =>
+                                        handleViewDetails(session.id)
+                                    }
+                                    onDelete={handleDeleteClick}
+                                />
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            ) : (
+                <Box
+                    sx={{
+                        textAlign: "center",
+                        mt: 8,
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        color="text.secondary"
+                    >
+                        No Sessions Found
+                    </Typography>
+                </Box>
+
             )}
-            <Dialog
-                open={
-                    deleteDialogOpen
-                }
+
+            {!loading && totalPages > 1 && (
+                <>
+                    <IconButton
+                        disabled={page === 0}
+                        onClick={() =>
+                            setPage((prev) => prev - 1)
+                        }
+                        sx={{
+                            position: "fixed",
+                            left: 30,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: 54,
+                            height: 54,
+                            borderRadius: "50%",
+                            bgcolor: "white",
+                            boxShadow: 3,
+                            zIndex: 1000,
+
+                            "&:hover": {
+                                bgcolor: "#1976d2",
+                                color: "#fff",
+                            },
+
+                            "&.Mui-disabled": {
+                                bgcolor: "#f2f2f2",
+                            },
+                        }}
+                    >
+                        <KeyboardArrowLeftIcon
+                            fontSize="large"
+                        />
+                    </IconButton>
+
+                    <IconButton
+                        disabled={
+                            page === totalPages - 1
+                        }
+                        onClick={() =>
+                            setPage((prev) => prev + 1)
+                        }
+                        sx={{
+                            position: "fixed",
+                            right: 30,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: 54,
+                            height: 54,
+                            borderRadius: "50%",
+                            bgcolor: "white",
+                            boxShadow: 3,
+                            zIndex: 1000,
+
+                            "&:hover": {
+                                bgcolor: "#1976d2",
+                                color: "#fff",
+                            },
+
+                            "&.Mui-disabled": {
+                                bgcolor: "#f2f2f2",
+                            },
+                        }}
+                    >
+                        <KeyboardArrowRightIcon
+                            fontSize="large"
+                        />
+                    </IconButton>
+                </>
+            )}
+
+            <SessionDetailsDialog
+                open={detailsOpen}
                 onClose={() =>
-                    setDeleteDialogOpen(
-                        false
-                    )
+                    setDetailsOpen(false)
+                }
+                session={selectedSession}
+            />
+
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() =>
+                    setDeleteDialogOpen(false)
                 }
             >
                 <DialogTitle>
@@ -461,12 +649,9 @@ const CoordinatorSessionsPage = () => {
                 </DialogContent>
 
                 <DialogActions>
-
                     <Button
                         onClick={() =>
-                            setDeleteDialogOpen(
-                                false
-                            )
+                            setDeleteDialogOpen(false)
                         }
                     >
                         Cancel
@@ -475,17 +660,14 @@ const CoordinatorSessionsPage = () => {
                     <Button
                         color="error"
                         variant="contained"
-                        onClick={
-                            handleDeleteSession
-                        }
+                        onClick={handleDeleteSession}
                     >
                         Delete
                     </Button>
-
                 </DialogActions>
             </Dialog>
-        </Box>
 
+        </Box>
     );
 };
 

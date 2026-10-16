@@ -432,224 +432,224 @@ const UpdateProfileDialog = ({
             </DialogTitle>
 
 
-                <DialogContent>
+            <DialogContent>
 
-                    <Stack spacing={3} sx={{mt:2}}>
-
-
-                        {/* Personal */}
-
-                        <Typography variant="h6">
-                            Personal Information
-                        </Typography>
-
-                        <Divider/>
+                <Stack spacing={3} sx={{mt:2}}>
 
 
-                        <Grid container spacing={2}>
+                    {/* Personal */}
 
-                            <Grid item xs={12} sm={6}>
-                                <AppSelectField
-                                    control={control}
-                                    name="gender"
-                                    label="Gender"
-                                    options={genderOptions}
-                                />
-                            </Grid>
+                    <Typography variant="h6">
+                        Personal Information
+                    </Typography>
+
+                    <Divider/>
 
 
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="dateOfBirth"
+                    <Grid container spacing={2}>
 
-                                    type="date"
-                                />
-                            </Grid>
-
-
-                            <Grid item xs={12} sm={6}>
-                                <AppSelectField
-                                    control={control}
-                                    name="bloodGroup"
-                                    label="Blood Group"
-                                    options={bloodGroupOptions}
-                                />
-                            </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <AppSelectField
+                                control={control}
+                                name="gender"
+                                label="Gender"
+                                options={genderOptions}
+                            />
+                        </Grid>
 
 
-                            <Grid item xs={12} sm={6}>
-                                <AppSelectField
-                                    control={control}
-                                    name="residenceType"
-                                    label="Residence Type"
-                                    options={residenceOptions}
-                                />
-                            </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="dateOfBirth"
 
+                                type="date"
+                            />
+                        </Grid>
+
+
+                        <Grid item xs={12} sm={6}>
+                            <AppSelectField
+                                control={control}
+                                name="bloodGroup"
+                                label="Blood Group"
+                                options={bloodGroupOptions}
+                            />
+                        </Grid>
+
+
+                        <Grid item xs={20} sm={10}>
+                            <AppSelectField
+                                control={control}
+                                name="residenceType"
+                                label="Residence Type"
+                                options={residenceOptions}
+                            />
+                        </Grid>
+
+                    </Grid>
+
+
+
+                    {/* Contact */}
+
+                    <Typography variant="h6">
+                        Contact Information
+                    </Typography>
+
+                    <Divider/>
+
+
+                    <Grid container spacing={2}>
+
+
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="whatsappNumber"
+                                label="WhatsApp Number"
+                            />
+                        </Grid>
+
+
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="personalEmail"
+                                label="Personal Email"
+                            />
+                        </Grid>
+
+
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="parentContactNumber"
+                                label="Parent Contact Number"
+                            />
+                        </Grid>
+
+
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="parentEmail"
+                                label="Parent Email"
+                            />
+                        </Grid>
+
+
+                    </Grid>
+
+
+
+                    {/* Identity */}
+
+
+                    <Typography variant="h6">
+                        Identity Details
+                    </Typography>
+
+                    <Divider/>
+
+
+                    <Grid container spacing={2}>
+
+
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="aadhaarNumber"
+                                label="Aadhaar Number"
+                            />
                         </Grid>
 
 
 
-                        {/* Contact */}
-
-                        <Typography variant="h6">
-                            Contact Information
-                        </Typography>
-
-                        <Divider/>
-
-
-                        <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                            <AppFormField
+                                control={control}
+                                name="panNumber"
+                                label="PAN Number"
+                            />
+                        </Grid>
 
 
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="whatsappNumber"
-                                    label="WhatsApp Number"
-                                />
-                            </Grid>
+                        <Grid item xs={12}>
+                            <AppFormField
+                                control={control}
+                                name="residentialAddress"
+                                label="Residential Address"
+                                multiline
+                                rows={5}
+                                placeholder="House No, Street, Area, City, State, Pincode"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                sx={{
+                                    textTransform: "none",
+                                    borderRadius: 2
+                                }}
+                                startIcon={<LocationOnIcon />}
+                                onClick={handleCurrentLocation}
+                            >
+                                Use Current Location
+                            </Button>
+                        </Grid>
+
+                    </Grid>
 
 
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="personalEmail"
-                                    label="Personal Email"
-                                />
-                            </Grid>
+
+                    {/* Professional */}
+
+                    <Typography variant="h6">
+                        Professional Links
+                    </Typography>
+
+                    <Divider/>
 
 
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="parentContactNumber"
-                                    label="Parent Contact Number"
-                                />
-                            </Grid>
+                    <Grid container spacing={2}>
 
 
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="parentEmail"
-                                    label="Parent Email"
-                                />
-                            </Grid>
-
-
+                        <Grid item xs={12}>
+                            <AppFormField
+                                control={control}
+                                name="githubLink"
+                                label="Github URL"
+                            />
                         </Grid>
 
 
 
-                        {/* Identity */}
-
-
-                        <Typography variant="h6">
-                            Identity Details
-                        </Typography>
-
-                        <Divider/>
-
-
-                        <Grid container spacing={2}>
-
-
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="aadhaarNumber"
-                                    label="Aadhaar Number"
-                                />
-                            </Grid>
-
-
-
-                            <Grid item xs={12} sm={6}>
-                                <AppFormField
-                                    control={control}
-                                    name="panNumber"
-                                    label="PAN Number"
-                                />
-                            </Grid>
-
-
-                            <Grid item xs={12}>
-                                <AppFormField
-                                    control={control}
-                                    name="residentialAddress"
-                                    label="Residential Address"
-                                    multiline
-                                    rows={5}
-                                    placeholder="House No, Street, Area, City, State, Pincode"
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    sx={{
-                                        textTransform: "none",
-                                        borderRadius: 2
-                                    }}
-                                    startIcon={<LocationOnIcon />}
-                                    onClick={handleCurrentLocation}
-                                >
-                                    Use Current Location
-                                </Button>
-                            </Grid>
-
+                        <Grid item xs={12}>
+                            <AppFormField
+                                control={control}
+                                name="linkedinLink"
+                                label="LinkedIn URL"
+                            />
                         </Grid>
 
 
-
-                        {/* Professional */}
-
-                        <Typography variant="h6">
-                            Professional Links
-                        </Typography>
-
-                        <Divider/>
-
-
-                        <Grid container spacing={2}>
-
-
-                            <Grid item xs={12}>
-                                <AppFormField
-                                    control={control}
-                                    name="githubLink"
-                                    label="Github URL"
-                                />
-                            </Grid>
-
-
-
-                            <Grid item xs={12}>
-                                <AppFormField
-                                    control={control}
-                                    name="linkedinLink"
-                                    label="LinkedIn URL"
-                                />
-                            </Grid>
-
-
-                            <Grid item xs={12}>
-                                <AppFormField
-                                    control={control}
-                                    name="resumeUrl"
-                                    label="Resume URL"
-                                />
-                            </Grid>
-
-
+                        <Grid item xs={12}>
+                            <AppFormField
+                                control={control}
+                                name="resumeUrl"
+                                label="Resume URL"
+                            />
                         </Grid>
 
 
-                    </Stack>
+                    </Grid>
 
-                </DialogContent>
+
+                </Stack>
+
+            </DialogContent>
 
 
             <DialogActions>

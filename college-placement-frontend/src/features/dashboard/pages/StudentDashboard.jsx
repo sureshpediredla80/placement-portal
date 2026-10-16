@@ -134,11 +134,11 @@ const StudentDashboard = () => {
     const getInitials = (name) =>
         name
             ? name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .substring(0, 2)
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .substring(0, 2)
             : "ST";
 
     return (

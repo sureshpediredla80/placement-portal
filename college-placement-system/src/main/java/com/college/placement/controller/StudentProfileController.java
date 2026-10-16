@@ -54,7 +54,7 @@ import com.college.placement.exception.BadRequestException;
  * Security & Access Control:
  *  - All "/me" endpoints are restricted to ROLE_STUDENT.
  *  - The "/search" endpoint is restricted to ROLE_COORDINATOR and ROLE_ADMIN.
- *  - Access is assumed to be secured at the SecurityConfig layer, with 
+ *  - Access is assumed to be secured at the SecurityConfig layer, with
  *    @PreAuthorize annotations provided here for explicit documentation and defence-in-depth.
  * ============================================================
  */
@@ -135,7 +135,7 @@ public class StudentProfileController {
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<StudentProfileResponse> updateMyProfile(
             @Valid @RequestBody StudentProfileUpdateRequest request) {
-        
+
         logger.info("REST request to update logged-in student's profile.");
         StudentProfileResponse response = studentProfileService.updateMyProfile(request);
         return ResponseEntity.ok(response);

@@ -272,11 +272,11 @@ const AdminBranchesPage = () => {
                     overflow:"hidden",
                 }}
             >
-            <BranchesTable
-                branches={branches}
-                loading={loading}
-                onDelete={handleDeleteClick}
-            />
+                <BranchesTable
+                    branches={branches}
+                    loading={loading}
+                    onDelete={handleDeleteClick}
+                />
             </Paper>
             <AppSnackbar
 

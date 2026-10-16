@@ -148,8 +148,8 @@ public class ApplicationService {
 
         // Update student placement status to APPLIED if not already selected/placed
         if (student.getPlacementStatus() == PlacementStatus.ELIGIBLE ||
-            student.getPlacementStatus() == PlacementStatus.PREPARING ||
-            student.getPlacementStatus() == PlacementStatus.NOT_PREPARED) {
+                student.getPlacementStatus() == PlacementStatus.PREPARING ||
+                student.getPlacementStatus() == PlacementStatus.NOT_PREPARED) {
             student.setPlacementStatus(PlacementStatus.APPLIED);
             studentProfileRepository.save(student);
         }
@@ -159,7 +159,7 @@ public class ApplicationService {
         saveStatusHistory(
                 savedApplication,
                 ApplicationStatus.APPLIED);
-        log.info("Application successfully submitted with ID: {} for student: {} and company: {}", 
+        log.info("Application successfully submitted with ID: {} for student: {} and company: {}",
                 savedApplication.getId(), student.getRollNumber(), company.getCompanyName());
 
         return mapToApplicationResponse(savedApplication);
@@ -290,7 +290,7 @@ public class ApplicationService {
      * Allowed from APPLIED or SHORTLISTED statuses.
      *
      * @param applicationId the application ID
-     //* @param remarks the rejection remarks
+    //* @param remarks the rejection remarks
      * @return the updated application response
      * @throws BadRequestException if transition is invalid
      */
@@ -625,7 +625,7 @@ public class ApplicationService {
         }
 
         switch (targetStatus) {
-           
+
             case REJECTED:
                 if (currentStatus != ApplicationStatus.APPLIED) {
                     throw new BadRequestException(
@@ -815,11 +815,11 @@ public class ApplicationService {
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());
         List<PlacementApplication> subList = (start <= list.size()) ? list.subList(start, end) : Collections.emptyList();
-        
+
         List<ApplicationResponse> content = subList.stream()
                 .map(this::mapToApplicationResponse)
                 .collect(Collectors.toList());
-                
+
         return new PageImpl<>(content, pageable, list.size());
     }
 
@@ -839,7 +839,7 @@ public class ApplicationService {
                 .id(application.getId())
                 .applicationDate(application.getApplicationDate())
                 .status(application.getStatus())
-               // .remarks(remarksMap.get(application.getId()))
+                // .remarks(remarksMap.get(application.getId()))
                 .studentId(student != null ? student.getId() : null)
                 .fullName(student != null && student.getUser() != null ? student.getUser().getFullName() : null)
                 .rollNumber(student != null ? student.getRollNumber() : null)

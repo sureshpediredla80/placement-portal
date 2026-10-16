@@ -62,11 +62,11 @@ const DetailItem = ({ label, value }) => (
 const ApplicationDetailsDialog = (
 
     {
-                                      open,
-                                      onClose,
-                                      application,
-                                      onStatusUpdated,
-                                  }) => {
+        open,
+        onClose,
+        application,
+        onStatusUpdated,
+    }) => {
     const [actionLoading, setActionLoading] =
         useState(false);
     const [snackbar, setSnackbar] = useState({

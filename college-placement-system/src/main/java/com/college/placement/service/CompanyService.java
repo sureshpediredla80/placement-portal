@@ -35,7 +35,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final BranchRepository branchRepository;
-private final NotificationService notificationService;
+    private final NotificationService notificationService;
     private static final BigDecimal LPA_MULTIPLIER =
             BigDecimal.valueOf(100_000);
     /**
@@ -103,9 +103,9 @@ private final NotificationService notificationService;
                 request.getAllowAlreadyPlacedStudents()
         );
         // Uniqueness validation
-       // if (companyRepository.existsByCompanyName(request.getCompanyName())) {
-       //     throw new BadRequestException("Company with name '" + request.getCompanyName() + "' already exists.");
-      //  }
+        // if (companyRepository.existsByCompanyName(request.getCompanyName())) {
+        //     throw new BadRequestException("Company with name '" + request.getCompanyName() + "' already exists.");
+        //  }
 
         // Resolving allowed branch entities
         Set<Branch> allowedBranches = loadBranches(request.getAllowedBranchIds());
@@ -199,9 +199,9 @@ private final NotificationService notificationService;
             if (newName.isEmpty()) {
                 throw new BadRequestException("Company name cannot be blank.");
             }
-           // if (!newName.equalsIgnoreCase(company.getCompanyName()) && companyRepository.existsByCompanyName(newName)) {
-             //   throw new BadRequestException("Company with name '" + newName + "' already exists.");
-          //  }
+            // if (!newName.equalsIgnoreCase(company.getCompanyName()) && companyRepository.existsByCompanyName(newName)) {
+            //   throw new BadRequestException("Company with name '" + newName + "' already exists.");
+            //  }
             company.setCompanyName(newName);
         }
 

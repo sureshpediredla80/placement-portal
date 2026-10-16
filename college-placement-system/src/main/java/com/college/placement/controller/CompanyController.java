@@ -89,7 +89,7 @@ public class CompanyController {
      * @param companyId the ID of the company drive to delete
      * @return ResponseEntity with HTTP 204 No Content status
 
- */
+     */
     @DeleteMapping("/{companyId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
     @Operation(summary = "Delete endpoint")

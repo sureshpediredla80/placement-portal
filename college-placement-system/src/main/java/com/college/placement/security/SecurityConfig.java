@@ -25,7 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class SecurityConfig { 
+public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
@@ -67,7 +67,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
+                List.of(
+                        "http://10.10.2.99",
+                        "http://10.10.2.99:5173",
+                        "http://localhost:5173"
+                )
         );
 
         configuration.setAllowedMethods(
@@ -112,40 +116,40 @@ public class SecurityConfig {
                                         "/swagger-ui/**",
                                         "/swagger-ui.html"
                                 ).permitAll()
-                
+
                 .requestMatchers(HttpMethod.POST, "/api/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/admin/dashboard").hasAuthority("ROLE_ADMIN")
-                
+
                 .requestMatchers(HttpMethod.GET, "/api/branches").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/branches").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/branches/**").hasAuthority("ROLE_ADMIN")
-                
+
                 .requestMatchers(HttpMethod.GET, "/api/skills").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/skills").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
-                
+
                 .requestMatchers("/api/student-profiles/me").hasAnyAuthority("ROLE_STUDENT")
                 .requestMatchers("/api/student-profiles/search").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers("/api/student-profiles/eligible-companies").hasAuthority("ROLE_STUDENT")
-                
+
                 .requestMatchers("/api/certificates/my-certificates").hasAuthority("ROLE_STUDENT")
                 .requestMatchers(HttpMethod.PUT, "/api/certificates/*/status").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
-                
+
                 .requestMatchers(HttpMethod.GET, "/api/companies/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/companies").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/companies/**").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/companies/**").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/companies/*/applications", "/api/companies/*/eligible-students").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
-                
+
                 .requestMatchers(HttpMethod.POST, "/api/applications/apply").hasAuthority("ROLE_STUDENT")
                 .requestMatchers(HttpMethod.GET, "/api/applications/my-applications").hasAuthority("ROLE_STUDENT")
                 .requestMatchers(HttpMethod.GET, "/api/applications").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/applications/*/status").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
 
-                    .requestMatchers(HttpMethod.GET, "/api/applications/placed-students", "/api/topics/**", "/api/sessions/**", "/api/news/**", "/api/notifications/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/topics/**", "/api/sessions/**", "/api/news/**", "/api/notifications/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/topics", "/api/sessions", "/api/news").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/topics/**", "/api/sessions/**", "/api/news/**").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/topics/**", "/api/sessions/**", "/api/news/**").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_ADMIN")
-                
+
                 .requestMatchers(HttpMethod.PUT, "/api/notifications/*/read").hasAnyAuthority("ROLE_STUDENT", "ROLE_COORDINATOR", "ROLE_ADMIN")
                     .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN")
                     .requestMatchers(

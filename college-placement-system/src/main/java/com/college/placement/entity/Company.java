@@ -63,8 +63,8 @@ public class Company {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
-        name = "company_preparation_resources",
-        joinColumns = @JoinColumn(name = "company_id")
+            name = "company_preparation_resources",
+            joinColumns = @JoinColumn(name = "company_id")
     )
     @Column(name = "resource_link", nullable = false)
     @Builder.Default
@@ -72,17 +72,17 @@ public class Company {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "company_allowed_branches",
-        joinColumns = @JoinColumn(name = "company_id"),
-        inverseJoinColumns = @JoinColumn(name = "branch_id")
+            name = "company_allowed_branches",
+            joinColumns = @JoinColumn(name = "company_id"),
+            inverseJoinColumns = @JoinColumn(name = "branch_id")
     )
     @Builder.Default
     private Set<Branch> allowedBranches = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
-        name = "company_allowed_years",
-        joinColumns = @JoinColumn(name = "company_id")
+            name = "company_allowed_years",
+            joinColumns = @JoinColumn(name = "company_id")
     )
     @Column(name = "allowed_year", nullable = false)
     @Builder.Default

@@ -42,7 +42,7 @@ const MENUS = {
     { label: "Users", icon: <AdminPanelSettings />, path: ROUTES.ADMIN_USERS },
     { label: "Students", icon: <School />, path: ROUTES.ADMIN_STUDENTS },
     { label: "Coordinators", icon: <People />, path: ROUTES.ADMIN_COORDINATORS },
-    { label: "Companies", icon: <Business />, path: ROUTES.ADMIN_COMPANIES },
+    { label: "Company Drives", icon: <Business />, path: ROUTES.ADMIN_COMPANIES },
 
     { label: "Applications", icon: <Assignment />, path: ROUTES.ADMIN_APPLICATIONS },
     { label: "Certificates", icon: <CardMembership />, path: ROUTES.ADMIN_CERTIFICATES },
@@ -57,7 +57,7 @@ const MENUS = {
     { label: "Dashboard", icon: <Dashboard />, path: ROUTES.COORDINATOR_DASHBOARD },
     { label: "Students", icon: <School />, path: ROUTES.COORDINATOR_STUDENTS },
     { label: "Topics", icon: <TopicIcon/>, path: ROUTES.COORDINATOR_TOPICS},
-    { label: "Companies", icon: <Business />, path: ROUTES.COORDINATOR_COMPANIES },
+    { label: "Company Drives", icon: <Business />, path: ROUTES.COORDINATOR_COMPANIES },
     { label: "Applications", icon: <Assignment />, path: ROUTES.COORDINATOR_APPLICATIONS },
     { label: "Certificates", icon: <CardMembership />, path: ROUTES.COORDINATOR_CERTIFICATES },
     { label: "Sessions", icon: <EventNote />, path: ROUTES.COORDINATOR_SESSIONS },
@@ -66,7 +66,7 @@ const MENUS = {
   ],
   [ROLES.STUDENT]: [
     { label: "Dashboard", icon: <Dashboard />, path: ROUTES.STUDENT_DASHBOARD },
-    { label: "Companies", icon: <Business />, path: ROUTES.STUDENT_COMPANIES },
+    { label: "Company Drives", icon: <Business />, path: ROUTES.STUDENT_COMPANIES },
     { label: "Topics", icon: <TopicIcon/>, path: ROUTES.STUDENT_TOPICS},
     { label: "Applications", icon: <Assignment />, path: ROUTES.STUDENT_APPLICATIONS },
     { label: "Certificates", icon: <CardMembership />, path: ROUTES.STUDENT_CERTIFICATES },

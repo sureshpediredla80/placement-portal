@@ -113,7 +113,7 @@ public class CoordinatorDashboardService {
         // ── STEP 8: Build Topic Statistics ────────────────────────────────────
         long globalTopics = topicRepository.countByIsGlobalTrue();
         long branchTopics = topicRepository.countTopicsForBranch(branch);
-        
+
         TopicStatisticsResponse topicStats = TopicStatisticsResponse.builder()
                 .globalTopics(globalTopics)
                 .branchTopics(branchTopics)

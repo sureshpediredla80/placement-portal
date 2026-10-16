@@ -10,6 +10,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
+import TablePagination from "@mui/material/TablePagination";
 import SearchStudentsDialog from "../components/SearchStudentsDialog";
 import {
     Box,
@@ -38,6 +39,19 @@ const CoordinatorStudentsPage = () => {
         setOpenSearchDialog,
     ] = useState(false);
     const [rollNumber, setRollNumber] = useState("");
+    const [page, setPage] = useState(0);
+
+    const [rowsPerPage, setRowsPerPage] =
+        useState(10);
+
+    const [totalElements, setTotalElements] =
+        useState(0);
+
+    const [filters, setFilters] =
+        useState(null);
+
+    const [hasSearched, setHasSearched] =
+        useState(false);
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [
@@ -49,27 +63,70 @@ const CoordinatorStudentsPage = () => {
         openStudentDialog,
         setOpenStudentDialog,
     ] = useState(false);
+    const fetchStudents = async (
+        currentPage = page,
+        currentSize = rowsPerPage
+    ) => {
 
-    const fetchStudents = async () => {
         setLoading(true);
 
         try {
-            const response =
-                await getCoordinatorStudents();
 
-            setStudents(
-                response.content || []
+            const response =
+                await getCoordinatorStudents(
+                    currentPage,
+                    currentSize
+                );
+
+            setStudents(response.content || []);
+
+            setTotalElements(
+                response.totalElements || 0
             );
+
+            setHasSearched(false);
+
         } catch (error) {
+
             console.error(error);
+
         } finally {
+
             setLoading(false);
+
         }
+
     };
 
     useEffect(() => {
-        fetchStudents();
-    }, []);
+
+        if (hasSearched) {
+
+            if (filters) {
+
+                handleSearch(
+                    filters,
+                    page,
+                    rowsPerPage
+                );
+
+            }
+
+        } else {
+
+            fetchStudents(
+                page,
+                rowsPerPage
+            );
+
+        }
+
+    }, [
+        page,
+        rowsPerPage,
+        filters,
+        hasSearched,
+    ]);
     const handleViewStudent =
         async (studentId) => {
             try {
@@ -89,29 +146,58 @@ const CoordinatorStudentsPage = () => {
                 console.error(error);
             }
         };
-    const handleSearch = async (filters) => {
+    const handleSearch = async (
+
+        filters,
+
+        currentPage = page,
+
+        currentSize = rowsPerPage
+
+    ) => {
+
         setLoading(true);
 
         try {
+
             const response =
                 await searchStudents({
+
                     ...filters,
-                    page: 0,
-                    size: 10,
+
+                    page: currentPage,
+
+                    size: currentSize,
+
                     sortBy: "id",
+
                     sortDir: "desc",
+
                 });
 
-            setStudents(
-                response.content || []
+            setStudents(response.content || []);
+
+            setTotalElements(
+                response.totalElements || 0
             );
+
+            setFilters(filters);
+
+            setHasSearched(true);
+
         } catch (error) {
+
             console.error(error);
+
         } finally {
+
             setLoading(false);
+
         }
+
     };
     const handleRollNumberSearch = async () => {
+
         if (!rollNumber.trim()) {
             return;
         }
@@ -119,18 +205,38 @@ const CoordinatorStudentsPage = () => {
         setLoading(true);
 
         try {
+
             const response =
                 await getStudentByRollNumber(
                     rollNumber
                 );
 
             setStudents([response]);
+
+            setPage(0);
+
+            setTotalElements(1);
+
+            setFilters(null);
+
+            setHasSearched(true);
+
         } catch (error) {
+
             console.error(error);
 
             setStudents([]);
+
+            setTotalElements(0);
+
+            setFilters(null);
+
+            setHasSearched(true);
+
         } finally {
+
             setLoading(false);
+
         }
     };
 
@@ -251,14 +357,25 @@ const CoordinatorStudentsPage = () => {
                 <Button
                     variant="outlined"
                     startIcon={<RefreshIcon />}
-                    onClick={fetchStudents}
+                    onClick={() => {
+
+                        setRollNumber("");
+
+                        setFilters(null);
+
+                        setHasSearched(false);
+
+                        setPage(0);
+
+                        fetchStudents(0, rowsPerPage);
+
+                    }}
                 >
                     Refresh
                 </Button>
-
             </Box>
 
-            {students.length === 0 && (
+            {hasSearched && students.length === 0 && (
                 <Typography
                     color="text.secondary"
                 >
@@ -266,104 +383,151 @@ const CoordinatorStudentsPage = () => {
                 </Typography>
             )}
 
-            <TableContainer
-                component={Paper}
-                sx={{
-                    height: "75vh",
-                    overflowY: "auto",
-                }}
-            >
-                <Table stickyHeader>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={headerStyle}>
-                                Name
-                            </TableCell>
+            <Paper>
 
-                            <TableCell sx={headerStyle}>
-                                Roll Number
-                            </TableCell>
+                <TableContainer
+                    sx={{
+                        maxHeight: "70vh",
+                        overflowY: "auto",
+                    }}
+                >
+                    <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={headerStyle}>
+                                    Name
+                                </TableCell>
 
-                            <TableCell sx={headerStyle}>
-                                Year
-                            </TableCell>
-                            <TableCell sx={headerStyle}>
-                                CGPA
-                            </TableCell>
+                                <TableCell sx={headerStyle}>
+                                    Roll Number
+                                </TableCell>
 
-                            <TableCell sx={headerStyle}>
-                                Placement Status
-                            </TableCell>
-                            <TableCell sx={headerStyle}>
-                                Actions
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
+                                <TableCell sx={headerStyle}>
+                                    Year
+                                </TableCell>
+                                <TableCell sx={headerStyle}>
+                                    CGPA
+                                </TableCell>
 
-                    <TableBody>
-                        {students.map(
-                            (student) => (
-                                <TableRow
-                                    key={student.id}
-                                    sx={{
-                                        transition: "background-color 0.2s",
-                                        "&:hover": {
-                                            backgroundColor: "action.hover",
-                                        },
-                                    }}
-                                >
-                                    <TableCell>
-                                        {
-                                            student.fullName
-                                        }
-                                    </TableCell>
+                                <TableCell sx={headerStyle}>
+                                    Placement Status
+                                </TableCell>
+                                <TableCell sx={headerStyle}>
+                                    Actions
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
 
-                                    <TableCell>
-                                        {
-                                            student.rollNumber
-                                        }
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {
-                                            student.year
-                                        }
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {
-                                            student.cgpa
-                                        }
-                                    </TableCell>
-
-                                    <TableCell>
-                                        <Chip
-                                            label={student.placementStatus}
-                                            color={getStatusColor(
-                                                student.placementStatus
-                                            )}
-                                            size="small"
-                                            variant="filled"
-
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            onClick={() =>
-                                                handleViewStudent(
-                                                    student.id
-                                                )
+                        <TableBody>
+                            {students.map(
+                                (student) => (
+                                    <TableRow
+                                        key={student.id}
+                                        sx={{
+                                            transition: "background-color 0.2s",
+                                            "&:hover": {
+                                                backgroundColor: "action.hover",
+                                            },
+                                        }}
+                                    >
+                                        <TableCell>
+                                            {
+                                                student.fullName
                                             }
-                                        >
-                                            <VisibilityIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {
+                                                student.rollNumber
+                                            }
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {
+                                                student.year
+                                            }
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {
+                                                student.cgpa
+                                            }
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <Chip
+                                                label={student.placementStatus}
+                                                color={getStatusColor(
+                                                    student.placementStatus
+                                                )}
+                                                size="small"
+                                                variant="filled"
+
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <IconButton
+                                                onClick={() =>
+                                                    handleViewStudent(
+                                                        student.id
+                                                    )
+                                                }
+                                            >
+                                                <VisibilityIcon />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <TablePagination
+                    component="div"
+                    count={totalElements}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    onPageChange={(event, newPage) => {
+
+                        setPage(newPage);
+
+                    }}
+                    onRowsPerPageChange={(event) => {
+
+                        setRowsPerPage(
+                            parseInt(
+                                event.target.value,
+                                10
                             )
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        );
+
+                        setPage(0);
+
+                    }}
+                    sx={{
+                        borderTop: "1px solid #e0e0e0",
+
+                        "& .MuiTablePagination-toolbar": {
+                            px: 3,
+                            minHeight: 64,
+                        },
+
+                        "& .MuiTablePagination-selectLabel": {
+                            fontWeight: 600,
+                        },
+
+                        "& .MuiTablePagination-displayedRows": {
+                            fontWeight: 600,
+                        },
+
+                        "& .MuiIconButton-root": {
+                            borderRadius: 2,
+                        },
+                    }}
+                />
+
+            </Paper>
             <SearchStudentsDialog
                 open={openSearchDialog}
                 onClose={() =>

@@ -374,30 +374,30 @@ const StudentProfilePage = () => {
                         <Fade in={true} timeout={400}>
                             <Paper elevation={0} sx={{ p: 5, borderRadius: 6, boxShadow: "0 12px 35px rgba(0,0,0,.06)", border: '1px solid #f0f0f0', mx: "auto", maxWidth: 1200 }}>
                                 <Box sx={{ mb: 6 }}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={2}
-                                    mb={4}
-                                >
-                                    <Avatar
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            bgcolor: "#EEF4FF",
-                                            color: "#1976d2",
-                                        }}
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={2}
+                                        mb={4}
                                     >
-                                        <FaGraduationCap size={24} />
-                                    </Avatar>
+                                        <Avatar
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                bgcolor: "#EEF4FF",
+                                                color: "#1976d2",
+                                            }}
+                                        >
+                                            <FaGraduationCap size={24} />
+                                        </Avatar>
 
-                                    <Typography
-                                        variant="h5"
-                                        fontWeight={800}
-                                    >
-                                        Academic Information
-                                    </Typography>
-                                </Stack>
+                                        <Typography
+                                            variant="h5"
+                                            fontWeight={800}
+                                        >
+                                            Academic Information
+                                        </Typography>
+                                    </Stack>
                                 </Box>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12} md={4}><InfoCard icon={<FaUserGraduate size={24} />} title="Roll Number" value={student?.rollNumber} /></Grid>
@@ -427,30 +427,30 @@ const StudentProfilePage = () => {
                         <Fade in={true} timeout={400}>
                             <Paper elevation={0} sx={{ p: 5, borderRadius: 6, boxShadow: "0 12px 35px rgba(0,0,0,.06)", border: '1px solid #f0f0f0', mx: "auto", maxWidth: 1000 }}>
                                 <Box sx={{ mb: 6 }}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={2}
-                                    mb={4}
-                                >
-                                    <Avatar
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            bgcolor: "#EEF4FF",
-                                            color: "#1976d2",
-                                        }}
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={2}
+                                        mb={4}
                                     >
-                                        <HowToRegIcon sx={{ fontSize: 26 }} />
-                                    </Avatar>
+                                        <Avatar
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                bgcolor: "#EEF4FF",
+                                                color: "#1976d2",
+                                            }}
+                                        >
+                                            <HowToRegIcon sx={{ fontSize: 26 }} />
+                                        </Avatar>
 
-                                    <Typography
-                                        variant="h5"
-                                        fontWeight={800}
-                                    >
-                                        Admission Information
-                                    </Typography>
-                                </Stack>
+                                        <Typography
+                                            variant="h5"
+                                            fontWeight={800}
+                                        >
+                                            Admission Information
+                                        </Typography>
+                                    </Stack>
                                 </Box>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12} md={6}><InfoCard icon={<MdAssignmentTurnedIn size={28} />} title="Admission Type" value={student?.admissionType} /></Grid>
@@ -468,31 +468,31 @@ const StudentProfilePage = () => {
                         <Fade in={true} timeout={400}>
                             <Paper elevation={0} sx={{ p: 5, borderRadius: 6, boxShadow: "0 12px 35px rgba(0,0,0,.06)", border: '1px solid #f0f0f0', mx: "auto", maxWidth: 850 }}>
                                 <Box sx={{ mb: 6 }}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={2}
-                                    mb={4}
-                                >
-                                    <Avatar
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            bgcolor: "#EEF4FF",
-                                            color: "#1976d2",
-                                        }}
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={2}
+                                        mb={4}
                                     >
-                                        <LinkIcon sx={{ fontSize: 26 }} />
-                                    </Avatar>
+                                        <Avatar
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                bgcolor: "#EEF4FF",
+                                                color: "#1976d2",
+                                            }}
+                                        >
+                                            <LinkIcon sx={{ fontSize: 26 }} />
+                                        </Avatar>
 
-                                    <Typography
-                                        variant="h5"
-                                        fontWeight={800}
-                                    >
-                                        Professional Links
-                                    </Typography>
-                                </Stack>
-                                    </Box>
+                                        <Typography
+                                            variant="h5"
+                                            fontWeight={800}
+                                        >
+                                            Professional Links
+                                        </Typography>
+                                    </Stack>
+                                </Box>
                                 <Stack spacing={3}>
                                     <Button
                                         startIcon={<GitHubIcon size={24} />}
@@ -540,30 +540,30 @@ const StudentProfilePage = () => {
                         <Fade in={true} timeout={400}>
                             <Paper elevation={0} sx={{ p: 5, borderRadius: 6, boxShadow: "0 12px 35px rgba(0,0,0,.06)", border: '1px solid #f0f0f0', mx: "auto", maxWidth: 850 }}>
                                 <Box sx={{ mb: 6 }}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={2}
-                                    mb={4}
-                                >
-                                    <Avatar
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            bgcolor: "#EEF4FF",
-                                            color: "#1976d2",
-                                        }}
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={2}
+                                        mb={4}
                                     >
-                                        <CodeIcon sx={{ fontSize: 26 }} />
-                                    </Avatar>
+                                        <Avatar
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                bgcolor: "#EEF4FF",
+                                                color: "#1976d2",
+                                            }}
+                                        >
+                                            <CodeIcon sx={{ fontSize: 26 }} />
+                                        </Avatar>
 
-                                    <Typography
-                                        variant="h5"
-                                        fontWeight={800}
-                                    >
-                                        Technical Skills
-                                    </Typography>
-                                </Stack>
+                                        <Typography
+                                            variant="h5"
+                                            fontWeight={800}
+                                        >
+                                            Technical Skills
+                                        </Typography>
+                                    </Stack>
                                 </Box>
                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
                                     {student?.skills?.length > 0 ? (

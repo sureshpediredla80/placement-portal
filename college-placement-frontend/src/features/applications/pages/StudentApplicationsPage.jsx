@@ -68,11 +68,11 @@ const StudentApplicationsPage = () => {
                     pb: 2,
                 }}
             >
-            <Typography
-                variant="h5"
-                fontWeight={700}>
-                My Applications
-            </Typography>
+                <Typography
+                    variant="h5"
+                    fontWeight={700}>
+                    My Applications
+                </Typography>
                 <ToggleButtonGroup
                     exclusive
                     value={filter}
@@ -177,21 +177,21 @@ const StudentApplicationsPage = () => {
                         }}
                     >
                         <Grid container spacing={3}>
-                        {filteredApplications.map(
-                            (application) => (
-                                <Grid
-                                    item
-                                    xs={12}
-                                    md={6}
-                                    key={application.id}
-                                >
-                                    <ApplicationCard
-                                        application={application}
-                                    />
-                                </Grid>
-                            )
-                        )}
-                    </Grid>
+                            {filteredApplications.map(
+                                (application) => (
+                                    <Grid
+                                        item
+                                        xs={12}
+                                        md={6}
+                                        key={application.id}
+                                    >
+                                        <ApplicationCard
+                                            application={application}
+                                        />
+                                    </Grid>
+                                )
+                            )}
+                        </Grid>
                     </Box>
                 )}
             {!loading && totalPages > 1 && (
